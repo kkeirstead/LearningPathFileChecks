@@ -1,0 +1,15 @@
+name: 'CheckLearningPathLinks Action'
+description: 'Checks the links in the learning paths for staleness'
+inputs:
+  repoURLToSearch:
+    description: 'The repo referenced in the learning path docs (in URL form)'
+    required: true
+  learningPathsDirectory:
+    description: 'The directory where the learning paths reside (e.g. documentation/learningPath)'
+    required: true
+  paths:
+    description: 'Paths to the changed files'
+    required: false
+runs:
+  using: 'node16'
+  main: 'index.js'
