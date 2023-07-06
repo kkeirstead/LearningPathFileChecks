@@ -95,7 +95,6 @@ const main = async () => {
 
               if (hasLineNumber)
               {
-
                 var newContentLines = [];
                 var existingContentLines = [];
 
@@ -168,6 +167,11 @@ const main = async () => {
                     // file no longer exists
                     // recommend that the link be manually reviewed
                     manuallyReview.push(trimmedFilePath)
+                    console.log("MR: " + manuallyReview);
+                  }
+                  else
+                  {
+                    console.log("Content that we read: " + content.toString());
                   }
                 });
   
@@ -192,11 +196,6 @@ const main = async () => {
 
   } catch (error) {
     core.setFailed(error.message);
-  } finally
-  {
-    console.log("Finally");
-    console.log("Manually Review: " + manuallyReview.length)
-    console.log("Modified Files: " + modifiedFiles.length)
   }
 }
 
