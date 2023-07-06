@@ -147,7 +147,7 @@ const main = async () => {
                             {
                               console.log("Updated line number: " + updatedLineNumber);
 
-                              var updatedLearningPathFileContent = learningPathFileContentStr.substring(0, index + trimmedFilePath.length) + updatedLineNumber + learningPathFileContentStr.substring(endIndex, learningPathFileContentStr.length);
+                              var updatedLearningPathFileContent = learningPathFileContentStr.substring(0, endIndex - lineNumber.length) + updatedLineNumber + learningPathFileContentStr.substring(endIndex, learningPathFileContentStr.length);
 
                               console.log("Before" + learningPathFileContentStr);
                               console.log("After" + updatedLearningPathFileContent);
