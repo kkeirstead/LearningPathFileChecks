@@ -58,7 +58,7 @@ const main = async () => {
           for(var i = 0; i < indices.length; i++)
           {
             var index = indices[i];
-            var endIndex = learningPathFileContentStr.indexOf(')', index) - 1;
+            var endIndex = learningPathFileContentStr.indexOf(')', index);
             var link = learningPathFileContentStr.substring(index, endIndex);
             linksToCheck.push(link);
             console.log(link);
@@ -73,7 +73,6 @@ const main = async () => {
             if (hasLineNumber)
             {
               lineNumber = link.substring(indexOfLineNumber + linePrefix.length, link.length);
-              console.log(lineNumber);
             }
 
             const pathStartIndex = link.indexOf("src");
@@ -128,7 +127,10 @@ const main = async () => {
 
                             if (updatedLineNumber !== -1)
                             {
-                              var updatedLearningPathFileContent = learningPathFileContentStr.substring(0, indexOfLineNumber + linePrefix.length) + updatedLineNumber + learningPathFileContentStr.substring(endIndex + 1, learningPathFileContent.length);
+                              var updatedLearningPathFileContent = learningPathFileContentStr.substring(0, indexOfLineNumber + linePrefix.length) + updatedLineNumber + learningPathFileContentStr.substring(endIndex, learningPathFileContent.length);
+
+                              console.log("Before" + learningPathFileContentStr);
+                              console.log("After" + updatedLearningPathFileContent);
 
                               fs.writeFile(mergePathPrefix + learningPathFile, updatedLearningPathFileContent, (err) => {
 
@@ -172,11 +174,13 @@ const main = async () => {
           }
           
 
-          console.log(learningPathFile);
+          //console.log(learningPathFile);
         });
       });
     });
     
+    console.log("Manually Review: " + manuallyReview.length)
+    console.log("Modified Files: " + modifiedFiles.length)
 
     core.setOutput('modifiedFiles', modifiedFiles);
     core.setOutput('manuallyReview', manuallyReview);
