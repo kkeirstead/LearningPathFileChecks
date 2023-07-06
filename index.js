@@ -47,9 +47,10 @@ const main = async () => {
         fs.readFile(learningPathsDirectory + "/" + learningPathFile, (err, learningPathFileContent) => {
           if (err) throw err;
 
+          var learningPathFileContentStr = learningPathFileContent.toString();
 
           var indices = [];
-          for(var pos = learningPathFileContent.indexOf(repoURLToSearch); pos !== -1; pos = learningPathFileContent.indexOf(repoURLToSearch, pos + 1)) {
+          for(var pos = learningPathFileContentStr.indexOf(repoURLToSearch); pos !== -1; pos = learningPathFileContentStr.indexOf(repoURLToSearch, pos + 1)) {
               indices.push(pos);
           }
 
@@ -57,8 +58,8 @@ const main = async () => {
           for(var i = 0; i < indices.length; i++)
           {
             var index = indices[i];
-            var endIndex = learningPathFileContent.indexOf(')', index) - 1;
-            var link = learningPathFileContent.substring(index, endIndex);
+            var endIndex = learningPathFileContentStr.indexOf(')', index) - 1;
+            var link = learningPathFileContentStr.substring(index, endIndex);
             linksToCheck.push(link);
             console.log(link);
 
@@ -95,7 +96,7 @@ const main = async () => {
                 // not sure the best way to do this...might have to count newlines on merge and head
                 // and then compare the lines.
                 fs.readFile(mergePathPrefix + pathsToCheck[pathIndex], (err, newContent) => { // can probably also used trimmedFilePath here...depends how prefixes work
-                  if (err || learningPathFileContent === null || learningPathFileContent.length === 0)
+                  if (err || learningPathFileContentStr === null || learningPathFileContentStr.length === 0)
                   {
                     // file no longer exists
                     // recommend that the link be manually reviewed
@@ -127,7 +128,7 @@ const main = async () => {
 
                             if (updatedLineNumber !== -1)
                             {
-                              var updatedLearningPathFileContent = learningPathFileContent.substr(0, indexOfLineNumber + linePrefix.length) + updatedLineNumber + learningPathFileContent.substr(endIndex + 1, learningPathFileContent.length);
+                              var updatedLearningPathFileContent = learningPathFileContentStr.substring(0, indexOfLineNumber + linePrefix.length) + updatedLineNumber + learningPathFileContentStr.substring(endIndex + 1, learningPathFileContent.length);
 
                               fs.writeFile(mergePathPrefix + learningPathFile, updatedLearningPathFileContent, (err) => {
 
