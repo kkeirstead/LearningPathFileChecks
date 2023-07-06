@@ -87,7 +87,7 @@ const main = async () => {
 
             if (pathIndex !== -1)
             {
-              modifiedFiles.push(pathsToCheck); // push everything that's modified onto this list
+              modifiedFiles.push(trimmedFilePath); // push everything that's modified onto this list
 
               if (hasLineNumber)
               {
