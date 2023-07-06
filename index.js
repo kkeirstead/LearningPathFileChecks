@@ -63,7 +63,7 @@ const main = async () => {
             var endIndex = learningPathFileContentStr.indexOf(')', index);
             var link = learningPathFileContentStr.substring(index, endIndex);
             linksToCheck.push(link);
-            //console.log(link);
+            //console.log("Link: " + link);
 
             const linePrefix = "#L";
 
@@ -78,7 +78,7 @@ const main = async () => {
             }
 
             const pathStartIndex = link.indexOf("src");
-            const pathEndIndex = hasLineNumber ? indexOfLineNumber - 1 : endIndex;
+            const pathEndIndex = hasLineNumber ? indexOfLineNumber : endIndex;
 
             const trimmedFilePath = link.substring(pathStartIndex, pathEndIndex);
 
