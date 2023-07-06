@@ -81,6 +81,9 @@ const main = async () => {
             const trimmedFilePath = link.substring(pathStartIndex, pathEndIndex);
 
             const pathIndex = pathsToCheck.indexOf(trimmedFilePath)
+            console.log(trimmedFilePath);
+            console.log(pathIndex);
+            console.log("-----");
 
             if (pathIndex !== -1)
             {
