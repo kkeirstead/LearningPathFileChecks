@@ -14,8 +14,11 @@ const fs = require('fs');
 const main = async () => {
   try {
     const repoURLToSearch = core.getInput('repoURLToSearch', { required: true });
-    const learningPathsDirectory = core.getInput('learningPathsDirectory', { required: true });
+    const learningPathsDirectory = "../" + "head/" + core.getInput('learningPathsDirectory', { required: true });
     const paths = core.getInput('paths', {required: false});
+
+    console.log(process.cwd());
+    console.log(learningPathsDirectory);
 
     const insertFileNameParameter = "{insertFileName}";
 
