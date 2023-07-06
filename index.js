@@ -112,8 +112,10 @@ const main = async () => {
                   }
                   else
                   {
+                    var newContentStr = newContent.toString();
+
                     // file does exist, check line numbers
-                    newContentLines = newContent.split("\n");
+                    newContentLines = newContentStr.split("\n");
 
                     fs.readFile(headPathPrefix + pathsToCheck[pathIndex], (err, existingContent) => {
                     
