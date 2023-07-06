@@ -12,6 +12,10 @@ const github = require('@actions/github');
 const fs = require('fs');
 
 const main = async () => {
+
+  var modifiedFiles = []; // output
+  var manuallyReview = []; // output
+
   try {
     const repoURLToSearch = core.getInput('repoURLToSearch', { required: true });
     const learningPathsDirectory = "merge/" + core.getInput('learningPathsDirectory', { required: true });
@@ -28,8 +32,6 @@ const main = async () => {
     var linksToCheck = [];
     var pathsToCheck = [];
 
-    var modifiedFiles = []; // output
-    var manuallyReview = []; // output
 
     if (paths !== null && paths.trim() !== "")
     {
@@ -88,6 +90,8 @@ const main = async () => {
             if (pathIndex !== -1)
             {
               modifiedFiles.push(trimmedFilePath); // push everything that's modified onto this list
+
+              console.log("MF: " + modifiedFiles);
 
               if (hasLineNumber)
               {
@@ -181,8 +185,6 @@ const main = async () => {
         });
       });
 
-      console.log("Manually Review: " + manuallyReview.length)
-      console.log("Modified Files: " + modifiedFiles.length)
   
       core.setOutput('modifiedFiles', modifiedFiles);
       core.setOutput('manuallyReview', manuallyReview);
@@ -190,6 +192,11 @@ const main = async () => {
 
   } catch (error) {
     core.setFailed(error.message);
+  } finally
+  {
+    console.log("Finally");
+    console.log("Manually Review: " + manuallyReview.length)
+    console.log("Modified Files: " + modifiedFiles.length)
   }
 }
 
