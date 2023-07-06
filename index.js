@@ -44,7 +44,7 @@ const main = async () => {
     fs.readdir(learningPathsDirectory, (err, files) => {
       files.forEach(learningPathFile => {
 
-        fs.readFile(learningPathsDirectory + learningPathFile, (err, learningPathFileContent) => {
+        fs.readFile(learningPathsDirectory + "/" + learningPathFile, (err, learningPathFileContent) => {
           if (err) throw err;
 
 
