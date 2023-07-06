@@ -13,9 +13,6 @@ const fs = require('fs');
 
 const main = async () => {
 
-  var modifiedFiles = []; // output
-  var manuallyReview = []; // output
-
   try {
     const repoURLToSearch = core.getInput('repoURLToSearch', { required: true });
     const learningPathsDirectory = "merge/" + core.getInput('learningPathsDirectory', { required: true });
@@ -24,11 +21,12 @@ const main = async () => {
     console.log(process.cwd());
     console.log(learningPathsDirectory);
 
-    const insertFileNameParameter = "{insertFileName}";
-
     const mergePathPrefix = "merge/";
     const headPathPrefix = "head/";
 
+    var modifiedFiles = []; // output
+    var manuallyReview = []; // output
+    
     var linksToCheck = [];
     var pathsToCheck = [];
 
@@ -202,14 +200,14 @@ const main = async () => {
             
           }
           
-
-          //console.log(learningPathFile);
+          core.setOutput('modifiedFiles', modifiedFiles);
+          core.setOutput('manuallyReview', manuallyReview);
         });
       });
 
   
-      core.setOutput('modifiedFiles', modifiedFiles);
-      core.setOutput('manuallyReview', manuallyReview);
+      //core.setOutput('modifiedFiles', modifiedFiles);
+      //core.setOutput('manuallyReview', manuallyReview);
     });
 
   } catch (error) {
