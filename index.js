@@ -152,8 +152,12 @@ const main = async () => {
                               console.log("Before" + learningPathFileContentStr);
                               console.log("After" + updatedLearningPathFileContent);
 
-                              fs.writeFile(mergePathPrefix + learningPathFile, updatedLearningPathFileContent, (err) => {
-
+                              fs.writeFile(learningPathsDirectory + "/" + learningPathFile, updatedLearningPathFileContent, (err) => {
+                                if (err)
+                                {
+                                  console.log("Failed to write: " + err);
+                                }
+          
                               });
 
                             }
