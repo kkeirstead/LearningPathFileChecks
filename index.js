@@ -128,7 +128,9 @@ const main = async () => {
                       {
                         console.log("Else: " + existingContent.toString());
 
-                        existingContentLines = existingContent.split("\n");
+                        var existingContentStr = existingContent.toString();
+
+                        existingContentLines = existingContentStr.split("\n");
 
                         if (existingContentLines.length >= lineNumber && newContentLines.length >= lineNumber)
                         {
