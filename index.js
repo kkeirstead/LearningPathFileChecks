@@ -61,7 +61,7 @@ const main = async () => {
             var endIndex = learningPathFileContentStr.indexOf(')', index);
             var link = learningPathFileContentStr.substring(index, endIndex);
             linksToCheck.push(link);
-            console.log(link);
+            //console.log(link);
 
             const linePrefix = "#L";
 
@@ -99,7 +99,7 @@ const main = async () => {
                   {
                     // file no longer exists
                     // recommend that the link be manually reviewed
-                    deletedFiles.push(trimmedFilePath)
+                    manuallyReview.push(trimmedFilePath)
                   }
                   else
                   {
@@ -160,7 +160,7 @@ const main = async () => {
                   {
                     // file no longer exists
                     // recommend that the link be manually reviewed
-                    deletedFiles.push(trimmedFilePath)
+                    manuallyReview.push(trimmedFilePath)
                   }
                 });
   
@@ -177,13 +177,13 @@ const main = async () => {
           //console.log(learningPathFile);
         });
       });
-    });
-    
-    console.log("Manually Review: " + manuallyReview.length)
-    console.log("Modified Files: " + modifiedFiles.length)
 
-    core.setOutput('modifiedFiles', modifiedFiles);
-    core.setOutput('manuallyReview', manuallyReview);
+      console.log("Manually Review: " + manuallyReview.length)
+      console.log("Modified Files: " + modifiedFiles.length)
+  
+      core.setOutput('modifiedFiles', modifiedFiles);
+      core.setOutput('manuallyReview', manuallyReview);
+    });
 
   } catch (error) {
     core.setFailed(error.message);
