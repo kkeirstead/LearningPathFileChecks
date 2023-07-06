@@ -95,7 +95,7 @@ const main = async () => {
 
               if (hasLineNumber)
               {
-                console.log("Has Line Number: " + indexOfLineNumber);
+                console.log("Has Line Number: " + lineNumber);
 
                 var newContentLines = [];
                 var existingContentLines = [];
@@ -135,6 +135,8 @@ const main = async () => {
                         if (existingContentLines.length >= lineNumber && newContentLines.length >= lineNumber)
                         {
                           const lineNumberInt = Number(lineNumber) - 1;
+                          console.log("Existing: " + existingContentLines[lineNumberInt].trim());
+                          console.log("New: " + newContentLines[lineNumberInt].trim());
                           const equalLines = existingContentLines[lineNumberInt].trim() === newContentLines[lineNumberInt].trim()
 
                           if (!equalLines)
