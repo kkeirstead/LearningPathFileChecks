@@ -95,6 +95,8 @@ const main = async () => {
 
               if (hasLineNumber)
               {
+                console.log("Has Line Number: " + indexOfLineNumber);
+
                 var newContentLines = [];
                 var existingContentLines = [];
 
@@ -106,20 +108,24 @@ const main = async () => {
                     // file no longer exists
                     // recommend that the link be manually reviewed
                     manuallyReview.push(trimmedFilePath)
+                    console.log("MR_LN: " + manuallyReview);
                   }
                   else
                   {
                     // file does exist, check line numbers
                     newContentLines = newContent.split("\n");
 
-                    fs.readFile(headPathPrefix + trimmedFilePath, (err, existingContent) => {
+                    fs.readFile(headPathPrefix + pathsToCheck[pathIndex], (err, existingContent) => {
                     
                       if (err || existingContent === null || existingContent.length === 0)
                       {
+                        console.log("This should never happen: " + err);
                         // this should never happen
                       }
                       else
                       {
+                        console.log("Else: " + existingContent.toString());
+
                         existingContentLines = existingContent.split("\n");
 
                         if (existingContentLines.length >= lineNumber && newContentLines.length >= lineNumber)
