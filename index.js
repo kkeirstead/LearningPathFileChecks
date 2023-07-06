@@ -141,13 +141,13 @@ const main = async () => {
 
                           if (!equalLines)
                           {
-                            const updatedLineNumber = newContentLines.indexOf(existingContentLines[lineNumberInt]);
+                            const updatedLineNumber = newContentLines.indexOf(existingContentLines[lineNumberInt]) + 1;
 
                             if (updatedLineNumber !== -1)
                             {
                               console.log("Updated line number: " + updatedLineNumber);
 
-                              var updatedLearningPathFileContent = learningPathFileContentStr.substring(0, indexOfLineNumber + linePrefix.length) + updatedLineNumber + learningPathFileContentStr.substring(endIndex, learningPathFileContentStr.length);
+                              var updatedLearningPathFileContent = learningPathFileContentStr.substring(0, index + trimmedFilePath.length) + updatedLineNumber + learningPathFileContentStr.substring(endIndex, learningPathFileContentStr.length);
 
                               console.log("Before" + learningPathFileContentStr);
                               console.log("After" + updatedLearningPathFileContent);
