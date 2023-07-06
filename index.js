@@ -199,9 +199,9 @@ const main = async () => {
 
             
           }
-          
-          core.setOutput('modifiedFiles', modifiedFiles);
-          core.setOutput('manuallyReview', manuallyReview);
+
+          core.setOutput('modifiedFiles', modifiedFiles.join("\r\n"));
+          core.setOutput('manuallyReview', manuallyReview.join("\r\n"));
         });
       });
 
