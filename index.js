@@ -1,3 +1,9 @@
+// TODO:
+// Report link to learning path that needs to be manually reviewed
+// Don't just look for ) as end of link character
+// Don't print this out every single time a change is made (or add a silencing mechanism)
+// When a broken line has multiple possible matches, handle that scenario instead of just picking the first one
+
 const core = require('@actions/core');
 const fs = require('fs');
 
