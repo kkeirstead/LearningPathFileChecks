@@ -200,8 +200,8 @@ const main = async () => {
             
           }
 
-          core.setOutput('modifiedFiles', modifiedFiles.join("\r\n"));
-          core.setOutput('manuallyReview', manuallyReview.join("\r\n"));
+          core.setOutput('modifiedFiles', modifiedFiles.join(","));
+          core.setOutput('manuallyReview', manuallyReview.join(","));
         });
       });
 
