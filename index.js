@@ -103,7 +103,7 @@ const main = async () => {
                           return;
                         }
                         
-                        var updatedLearningPathFileContent = learningPathFileContentStr.substring(0, startIndex + pathEndIndex) + updatedLineNumber + learningPathFileContentStr.substring(endIndex, learningPathFileContentStr.length);
+                        var updatedLearningPathFileContent = learningPathFileContentStr.substring(0, startIndex + pathEndIndex + linePrefix.length) + updatedLineNumber + learningPathFileContentStr.substring(endIndex, learningPathFileContentStr.length);
 
                         fs.writeFile(currLearningFilePath, updatedLearningPathFileContent, (err) => {
                           if (err)
