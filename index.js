@@ -24,6 +24,7 @@ const main = async () => {
     const mergePathPrefix = "merge/";
     const headPathPrefix = "head/";
 
+    // switch these to sets instead of arrays
     var modifiedFiles = []; // output
     var manuallyReview = []; // output
     
@@ -41,7 +42,7 @@ const main = async () => {
     }
 
     // Scan each file in the learningPaths directory
-    fs.readdir(learningPathsDirectory, (err, files) => {
+    await fs.promises.readdir(learningPathsDirectory, (err, files) => {
       files.forEach(learningPathFile => {
 
         fs.readFile(learningPathsDirectory + "/" + learningPathFile, (err, learningPathFileContent) => {
@@ -200,11 +201,11 @@ const main = async () => {
             
           }
 
-          core.setOutput('modifiedFiles', modifiedFiles.join(","));
-          core.setOutput('manuallyReview', manuallyReview.join(","));
         });
       });
 
+      core.setOutput('modifiedFiles', modifiedFiles.join(","));
+      core.setOutput('manuallyReview', manuallyReview.join(","));
   
       //core.setOutput('modifiedFiles', modifiedFiles);
       //core.setOutput('manuallyReview', manuallyReview);
