@@ -17,13 +17,13 @@ var manuallyReview = []; // output
 function UpdateModifiedFiles(path)
 {
   modifiedFiles.push(path);
-  core.setOutput('modifiedFiles', modifiedFiles.join("\n"));
+  core.setOutput('modifiedFiles', modifiedFiles.join(","));
 }
 
 function UpdateManuallyReview(path)
 {
   manuallyReview.push(path);
-  core.setOutput('manuallyReview', manuallyReview.join("\n"));
+  core.setOutput('manuallyReview', manuallyReview.join(","));
 }
 
 const main = async () => {
