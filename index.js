@@ -204,12 +204,13 @@ const main = async () => {
         });
       });
 
-      core.setOutput('modifiedFiles', modifiedFiles.join(","));
-      core.setOutput('manuallyReview', manuallyReview.join(","));
   
       //core.setOutput('modifiedFiles', modifiedFiles);
       //core.setOutput('manuallyReview', manuallyReview);
     });
+
+    core.setOutput('modifiedFiles', modifiedFiles.join(","));
+    core.setOutput('manuallyReview', manuallyReview.join(","));
 
   } catch (error) {
     core.setFailed(error.message);
