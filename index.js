@@ -11,6 +11,9 @@ const core = require('@actions/core');
 const github = require('@actions/github');
 const fs = require('fs');
 
+var modifiedFiles = []; // output
+var manuallyReview = []; // output
+
 function UpdateModifiedFiles(path)
 {
   modifiedFiles.push(path);
@@ -35,9 +38,6 @@ const main = async () => {
 
     const mergePathPrefix = "merge/";
     const headPathPrefix = "head/";
-
-    var modifiedFiles = []; // output
-    var manuallyReview = []; // output
     
     var linksToCheck = [];
     var pathsToCheck = [];
