@@ -204,7 +204,7 @@ const main = async () => {
                 
               }
 
-              resolve(modifiedFiles, manuallyReview)
+              resolve()
 
             });
           });
@@ -223,17 +223,17 @@ const main = async () => {
     core.setFailed(error.message);
   }
 
-  readFileAsync().then((modifiedFiles, manuallyReview) => {
+  /*readFileAsync().then((modifiedFiles, manuallyReview) => {
     core.setOutput('modifiedFiles', modifiedFiles.join(","));
     core.setOutput('manuallyReview', manuallyReview.join(","));
 
-  });
+  });*/
 }
 
 // Call the main function to run the action
 //main();
 
-main().then((modifiedFiles, manuallyReview) => {
+main().then(() => {
   core.setOutput('modifiedFiles', modifiedFiles.join(","));
   core.setOutput('manuallyReview', manuallyReview.join(","));
 
