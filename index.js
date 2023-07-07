@@ -1,14 +1,4 @@
-// Flow
-//
-// On any PR change, scan each file in the learningPaths directory
-// For each link in the file, check if the changed file is included in the PR's changes
-// If so, check if the L## at the saved version of the file is the same as the L## at the current version of the file
-// If it isn't, scan the file to see if the line is still there (if so, recommend changing the L## to the new L##)
-// If the line can't be found, report back that the link should be manually reviewed for changes
-
-
 const core = require('@actions/core');
-const github = require('@actions/github');
 const fs = require('fs');
 
 var modifiedFiles = []; // output
@@ -33,154 +23,99 @@ const main = async () => {
     const learningPathsDirectory = "merge/" + core.getInput('learningPathsDirectory', { required: true });
     const paths = core.getInput('paths', {required: false});
 
-    console.log(process.cwd());
-    console.log(learningPathsDirectory);
-
     const mergePathPrefix = "merge/";
     const headPathPrefix = "head/";
+    const linePrefix = "#L";
     
-    var linksToCheck = [];
-    var pathsToCheck = [];
-
-
-    if (paths !== null && paths.trim() !== "")
-    {
-        pathsToCheck = paths.split(' ');
-    }
-    else
+    if (paths === null && paths.trim() === "")
     {
       return;
     }
+
+    var modifiedFilePaths = paths.split(' ');
 
     // Scan each file in the learningPaths directory
     fs.readdir(learningPathsDirectory, (err, files) => {
       files.forEach(learningPathFile => {
 
-        fs.readFile(learningPathsDirectory + "/" + learningPathFile, (err, learningPathFileContent) => {
+        const currLearningFilePath = learningPathsDirectory + "/" + learningPathFile
+
+        fs.readFile(currLearningFilePath, (err, learningPathFileContent) => {
           if (err) throw err;
 
           var learningPathFileContentStr = learningPathFileContent.toString();
 
-          var indices = [];
+          var linkIndices = [];
           for(var pos = learningPathFileContentStr.indexOf(repoURLToSearch); pos !== -1; pos = learningPathFileContentStr.indexOf(repoURLToSearch, pos + 1)) {
-              indices.push(pos);
+              linkIndices.push(pos);
           }
 
-          // for each index, find next instance of ')' to get the end of the link
-          for(var i = 0; i < indices.length; i++)
+          for(let startIndex of linkIndices)
           {
-            var index = indices[i];
-            var endIndex = learningPathFileContentStr.indexOf(')', index);
-            var link = learningPathFileContentStr.substring(index, endIndex);
-            linksToCheck.push(link);
-            //console.log("Link: " + link);
+            const endIndex = learningPathFileContentStr.indexOf(')', startIndex); // should also check for any character that can't be in url
+            const link = learningPathFileContentStr.substring(startIndex, endIndex);
 
-            const linePrefix = "#L";
-
-            const indexOfLineNumber = link.indexOf("#L");
+            const indexOfLineNumber = link.indexOf(linePrefix);
             const hasLineNumber = indexOfLineNumber !== -1;
 
-            var lineNumber = "";
-
-            if (hasLineNumber)
-            {
-              lineNumber = link.substring(indexOfLineNumber + linePrefix.length, link.length);
-            }
-
-            const pathStartIndex = link.indexOf("src");
+            const pathStartIndex = link.indexOf("src"); // should just trim the prefix, since this might not always be the case?
             const pathEndIndex = hasLineNumber ? indexOfLineNumber : endIndex;
 
             const trimmedFilePath = link.substring(pathStartIndex, pathEndIndex);
 
-            const pathIndex = pathsToCheck.indexOf(trimmedFilePath)
-            console.log(trimmedFilePath);
-            console.log(pathIndex);
-            console.log("-----");
+            const pathIndex = modifiedFilePaths.indexOf(trimmedFilePath)
 
             if (pathIndex !== -1)
             {
               UpdateModifiedFiles(trimmedFilePath);
 
-              if (hasLineNumber)
-              {
-                console.log("Has Line Number: " + lineNumber);
+              fs.readFile(mergePathPrefix + trimmedFilePath, (err, newContent) => {
+                if (err || learningPathFileContentStr === null || learningPathFileContentStr.length === 0)
+                {
+                  UpdateManuallyReview(trimmedFilePath);
+                }
+                else if (hasLineNumber)
+                {
+                  fs.readFile(headPathPrefix + trimmedFilePath, (err, existingContent) => {
+                  
+                    // If the file previously didn't exist, then we don't need to check line numbers
+                    if (err || existingContent === null || existingContent.length === 0) return; // not sure this is okay
+                    else
+                    {
+                      const lineNumber = Number(link.substring(indexOfLineNumber + linePrefix.length, link.length));
 
-                var newContentLines = [];
-                var existingContentLines = [];
+                      const newContentLines = newContent.toString().split("\n");
+                      const existingContentLines = existingContent.toString().split("\n");
 
-                fs.readFile(mergePathPrefix + pathsToCheck[pathIndex], (err, newContent) => {
-                  if (err || learningPathFileContentStr === null || learningPathFileContentStr.length === 0)
-                  {
-                    UpdateManuallyReview(trimmedFilePath);
-                  }
-                  else
-                  {
-                    var newContentStr = newContent.toString();
-
-                    // file does exist, check line numbers
-                    newContentLines = newContentStr.split("\n");
-
-                    fs.readFile(headPathPrefix + pathsToCheck[pathIndex], (err, existingContent) => {
-                    
-                      if (err || existingContent === null || existingContent.length === 0)
+                      if (existingContentLines.length < lineNumber || newContentLines.length < lineNumber)
                       {
-                        console.log("This should never happen: " + err);
-                        // this should never happen
+                        UpdateManuallyReview(trimmedFilePath);
+                        return;
                       }
-                      else
+
+                      if (existingContentLines[lineNumber - 1].trim() !== newContentLines[lineNumber - 1].trim())
                       {
-                        console.log("Else: " + existingContent.toString());
+                        const updatedLineNumber = newContentLines.indexOf(existingContentLines[lineNumber - 1]) + 1; // should check if there are multiple identical lines
 
-                        var existingContentStr = existingContent.toString();
-
-                        existingContentLines = existingContentStr.split("\n");
-
-                        if (existingContentLines.length >= lineNumber && newContentLines.length >= lineNumber)
+                        if (updatedLineNumber === -1)
                         {
-                          const lineNumberInt = Number(lineNumber) - 1;
-                          const equalLines = existingContentLines[lineNumberInt].trim() === newContentLines[lineNumberInt].trim()
-
-                          if (!equalLines)
-                          {
-                            const updatedLineNumber = newContentLines.indexOf(existingContentLines[lineNumberInt]) + 1;
-
-                            if (updatedLineNumber !== -1)
-                            {
-                              var updatedLearningPathFileContent = learningPathFileContentStr.substring(0, endIndex - lineNumber.length) + updatedLineNumber + learningPathFileContentStr.substring(endIndex, learningPathFileContentStr.length);
-
-                              fs.writeFile(learningPathsDirectory + "/" + learningPathFile, updatedLearningPathFileContent, (err) => {
-                                if (err)
-                                {
-                                  console.log("Failed to write: " + err);
-                                }
-          
-                              });
-
-                            }
-                            else
-                            {
-                              UpdateManuallyReview(trimmedFilePath);
-                            }
-                          }
+                          UpdateManuallyReview(trimmedFilePath);
+                          return;
                         }
+                        
+                        var updatedLearningPathFileContent = learningPathFileContentStr.substring(0, startIndex + pathEndIndex) + updatedLineNumber + learningPathFileContentStr.substring(endIndex, learningPathFileContentStr.length);
 
-                      }
-                    });
-
-                  }
-                });
-
-              }
-              else
-              {
-                // just check that the file still exists
-                fs.readFile(mergePathPrefix + pathsToCheck[pathIndex], (err, content) => {
-                  if (err || content === null || content.length === 0)
-                  {
-                    UpdateManuallyReview(trimmedFilePath);
-                  }
-                });
-              }
+                        fs.writeFile(currLearningFilePath, updatedLearningPathFileContent, (err) => {
+                          if (err)
+                          {
+                            console.log("Failed to write: " + err);
+                          }
+                        });
+                      }                      
+                    }
+                  });
+                }
+              });
             }
           }
         });
