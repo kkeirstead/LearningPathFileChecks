@@ -97,7 +97,7 @@ const main = async () => {
                       {
                         const updatedLineNumber = newContentLines.indexOf(existingContentLines[lineNumber - 1]) + 1; // should check if there are multiple identical lines
 
-                        if (updatedLineNumber === -1)
+                        if (updatedLineNumber === 0) // accounts for the +1 increment
                         {
                           UpdateManuallyReview(trimmedFilePath);
                           return;
