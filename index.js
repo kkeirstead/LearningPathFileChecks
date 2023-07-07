@@ -1,18 +1,18 @@
 const core = require('@actions/core');
 const fs = require('fs');
 
-var modifiedFiles = []; // output
-var manuallyReview = []; // output
+var modifiedFiles = new Set(); // output
+var manuallyReview = new Set(); // output
 
 function UpdateModifiedFiles(path)
 {
-  modifiedFiles.push(path);
+  modifiedFiles.add(path);
   core.setOutput('modifiedFiles', modifiedFiles.join(","));
 }
 
 function UpdateManuallyReview(path)
 {
-  manuallyReview.push(path);
+  manuallyReview.add(path);
   core.setOutput('manuallyReview', manuallyReview.join(","));
 }
 
