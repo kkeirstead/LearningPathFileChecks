@@ -6,14 +6,14 @@ var manuallyReview = new Set(); // output
 
 function UpdateModifiedFiles(path)
 {
-  modifiedFiles.add(path);  
-  core.setOutput('modifiedFiles', ','.join(modifiedFiles));
+  modifiedFiles.add(path);
+  core.setOutput('modifiedFiles', Array.from(modifiedFiles).join(","));
 }
 
 function UpdateManuallyReview(path)
 {
   manuallyReview.add(path);
-  core.setOutput('manuallyReview', ','.join(manuallyReview));
+  core.setOutput('manuallyReview', Array.from(manuallyReview).join(","));
 }
 
 const main = async () => {
