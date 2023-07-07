@@ -11,6 +11,10 @@ const core = require('@actions/core');
 const github = require('@actions/github');
 const fs = require('fs');
 
+// switch these to sets instead of arrays
+var modifiedFiles = []; // output
+var manuallyReview = []; // output
+
 const main = async () => {
 
   try {
@@ -24,9 +28,6 @@ const main = async () => {
     const mergePathPrefix = "merge/";
     const headPathPrefix = "head/";
 
-    // switch these to sets instead of arrays
-    var modifiedFiles = []; // output
-    var manuallyReview = []; // output
     
     var linksToCheck = [];
     var pathsToCheck = [];
