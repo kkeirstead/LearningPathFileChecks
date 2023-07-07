@@ -79,7 +79,7 @@ const main = async () => {
                   fs.readFile(headPathPrefix + trimmedFilePath, (err, existingContent) => {
                   
                     // If the file previously didn't exist, then we don't need to check line numbers
-                    if (err || existingContent === null || existingContent.length === 0) return; // not sure this is okay
+                    if (err || existingContent === null || existingContent.length === 0) {}
                     else
                     {
                       const lineNumber = Number(link.substring(indexOfLineNumber + linePrefix.length, link.length));
@@ -90,28 +90,27 @@ const main = async () => {
                       if (existingContentLines.length < lineNumber || newContentLines.length < lineNumber)
                       {
                         UpdateManuallyReview(trimmedFilePath);
-                        return;
                       }
-
-                      if (existingContentLines[lineNumber - 1].trim() !== newContentLines[lineNumber - 1].trim())
+                      else if (existingContentLines[lineNumber - 1].trim() !== newContentLines[lineNumber - 1].trim())
                       {
                         const updatedLineNumber = newContentLines.indexOf(existingContentLines[lineNumber - 1]) + 1; // should check if there are multiple identical lines
 
                         if (updatedLineNumber === 0) // accounts for the +1 increment
                         {
                           UpdateManuallyReview(trimmedFilePath);
-                          return;
                         }
-                        
-                        var updatedLearningPathFileContent = learningPathFileContentStr.substring(0, startIndex + pathEndIndex + linePrefix.length) + updatedLineNumber + learningPathFileContentStr.substring(endIndex, learningPathFileContentStr.length);
+                        else
+                        {
+                          var updatedLearningPathFileContent = learningPathFileContentStr.substring(0, startIndex + pathEndIndex + linePrefix.length) + updatedLineNumber + learningPathFileContentStr.substring(endIndex, learningPathFileContentStr.length);
 
-                        fs.writeFile(currLearningFilePath, updatedLearningPathFileContent, (err) => {
-                          if (err)
-                          {
-                            console.log("Failed to write: " + err);
-                          }
-                        });
-                      }                      
+                          fs.writeFile(currLearningFilePath, updatedLearningPathFileContent, (err) => {
+                            if (err)
+                            {
+                              console.log("Failed to write: " + err);
+                            }
+                          });
+                        }
+                      }
                     }
                   });
                 }
