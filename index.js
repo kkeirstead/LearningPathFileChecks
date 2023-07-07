@@ -44,7 +44,7 @@ const main = async () => {
     // Scan each file in the learningPaths directory
     const readFileAsync = () => {
       return new Promise(() => {
-        fs.promises.readdir(learningPathsDirectory, (err, files) => {
+        fs.readdir(learningPathsDirectory, (err, files) => {
           files.forEach(learningPathFile => {
 
             fs.readFile(learningPathsDirectory + "/" + learningPathFile, (err, learningPathFileContent) => {
