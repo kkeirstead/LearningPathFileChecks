@@ -108,9 +108,7 @@ const main = async () => {
                 var newContentLines = [];
                 var existingContentLines = [];
 
-                // not sure the best way to do this...might have to count newlines on merge and head
-                // and then compare the lines.
-                fs.readFile(mergePathPrefix + pathsToCheck[pathIndex], (err, newContent) => { // can probably also used trimmedFilePath here...depends how prefixes work
+                fs.readFile(mergePathPrefix + pathsToCheck[pathIndex], (err, newContent) => {
                   if (err || learningPathFileContentStr === null || learningPathFileContentStr.length === 0)
                   {
                     UpdateManuallyReview(trimmedFilePath);
@@ -140,8 +138,6 @@ const main = async () => {
                         if (existingContentLines.length >= lineNumber && newContentLines.length >= lineNumber)
                         {
                           const lineNumberInt = Number(lineNumber) - 1;
-                          console.log("Existing: " + existingContentLines[lineNumberInt].trim());
-                          console.log("New: " + newContentLines[lineNumberInt].trim());
                           const equalLines = existingContentLines[lineNumberInt].trim() === newContentLines[lineNumberInt].trim()
 
                           if (!equalLines)
@@ -150,12 +146,7 @@ const main = async () => {
 
                             if (updatedLineNumber !== -1)
                             {
-                              console.log("Updated line number: " + updatedLineNumber);
-
                               var updatedLearningPathFileContent = learningPathFileContentStr.substring(0, endIndex - lineNumber.length) + updatedLineNumber + learningPathFileContentStr.substring(endIndex, learningPathFileContentStr.length);
-
-                              console.log("Before" + learningPathFileContentStr);
-                              console.log("After" + updatedLearningPathFileContent);
 
                               fs.writeFile(learningPathsDirectory + "/" + learningPathFile, updatedLearningPathFileContent, (err) => {
                                 if (err)
@@ -188,29 +179,12 @@ const main = async () => {
                   {
                     UpdateManuallyReview(trimmedFilePath);
                   }
-                  else
-                  {
-                    console.log("Content that we read: " + content.toString());
-                  }
                 });
-  
               }
-
-
             }
-
-
-            
           }
-
-          //core.setOutput('modifiedFiles', modifiedFiles.join("\n"));
-          //core.setOutput('manuallyReview', manuallyReview.join("\n"));
         });
       });
-
-  
-      //core.setOutput('modifiedFiles', modifiedFiles);
-      //core.setOutput('manuallyReview', manuallyReview);
     });
 
   } catch (error) {
