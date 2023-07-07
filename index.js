@@ -42,7 +42,7 @@ const main = async () => {
     }
 
     // Scan each file in the learningPaths directory
-    const readFileAsync = () => {
+    //const readFileAsync = () => {
       return new Promise(() => {
         fs.readdir(learningPathsDirectory, (err, files) => {
           files.forEach(learningPathFile => {
@@ -213,7 +213,7 @@ const main = async () => {
           //core.setOutput('manuallyReview', manuallyReview);
         });
       });
-    }
+    //}
 
     //core.setOutput('modifiedFiles', modifiedFiles.join(","));
     //core.setOutput('manuallyReview', manuallyReview.join(","));
@@ -230,4 +230,10 @@ const main = async () => {
 }
 
 // Call the main function to run the action
-main();
+//main();
+
+main().then((modifiedFiles, manuallyReview) => {
+  core.setOutput('modifiedFiles', modifiedFiles.join(","));
+  core.setOutput('manuallyReview', manuallyReview.join(","));
+
+});
