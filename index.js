@@ -28,9 +28,10 @@ function UpdateManuallyReview(path, learningPathFile)
 
 function extractURLsFromString(str)
 {
+  console.log("Extract");
+
   // (http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-])
-  const urlRegex = "http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-]"
-  // /(https?:\/\/[^\s]+)/g;
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
   const urls = str.match(urlRegex) || [];
   return urls;
 }
