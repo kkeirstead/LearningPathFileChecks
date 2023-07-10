@@ -26,7 +26,7 @@ function UpdateManuallyReview(path, learningPathFile)
   core.setOutput('manuallyReview', Array.from(manuallyReview).join(","));
 }
 
-function CompareFiles(newLearningPathFileContentStr, repoURLToSearch, modifiedFilePaths, currLearningFilePath)
+function CompareFiles(newLearningPathFileContentStr, repoURLToSearch, modifiedFilePaths, currLearningFilePath, learningPathFile)
 {
   var linkIndices = [];
   for(var pos = newLearningPathFileContentStr.indexOf(repoURLToSearch); pos !== -1; pos = newLearningPathFileContentStr.indexOf(repoURLToSearch, pos + 1)) {
@@ -154,7 +154,7 @@ const main = async () => {
             }
             else
             {
-              CompareFiles(newLearningPathFileContentStr, repoURLToSearch, modifiedFilePaths, currLearningFilePath)
+              CompareFiles(newLearningPathFileContentStr, repoURLToSearch, modifiedFilePaths, currLearningFilePath, learningPathFile)
             }
           });
         });
