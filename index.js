@@ -109,7 +109,7 @@ const main = async () => {
                         {
                           const alternateLineNumber = newContentLines.indexOf(existingContentLines[lineNumber - 1], updatedLineNumber) + 1;
 
-                          if (alternateLineNumber === 0)
+                          if (alternateLineNumber !== 0)
                           {
                             UpdateManuallyReview(trimmedFilePath, learningPathFile);
                           }
