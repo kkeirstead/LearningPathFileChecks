@@ -141,7 +141,7 @@ const main = async () => {
           fs.readFile(existingLearningFilePath, (err, existingLearningPathFileContent) => {
             if (existingLearningPathFileContent !== null && existingLearningPathFileContent.length > 0)
             {
-              var existingLearningPathFileContentStr = newLearningPathFileContent.toString();
+              var existingLearningPathFileContentStr = existingLearningPathFileContent.toString();
 
               if (existingLearningPathFileContentStr === newLearningPathFileContentStr)
               {
