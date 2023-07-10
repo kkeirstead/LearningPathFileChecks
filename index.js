@@ -29,7 +29,8 @@ function UpdateManuallyReview(path, learningPathFile)
 function extractURLsFromString(str)
 {
   // (http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-])
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const urlRegex = "http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-]"
+  // /(https?:\/\/[^\s]+)/g;
   const urls = str.match(urlRegex) || [];
   return urls;
 }
@@ -37,6 +38,8 @@ function extractURLsFromString(str)
 function CompareFiles(newLearningPathFileContentStr, repoURLToSearch, modifiedFilePaths, currLearningFilePath, learningPathFile)
 {
   const urlsList = extractURLsFromString(newLearningPathFileContentStr);
+
+  console.log("Compare Files");
 
   for (let url of urlsList)
   {
