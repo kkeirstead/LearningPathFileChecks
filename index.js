@@ -3,7 +3,7 @@
 // Don't just look for ) as end of link character
 // Don't print this out every single time a change is made (or add a silencing mechanism)
 // When a broken line has multiple possible matches, handle that scenario instead of just picking the first one -> Done
-// Handle cases where the learning path was already manually updated...could probably start with checking if the file was manually changed, don't scan it and assume the user has already updated it accordingly
+// Handle cases where the learning path was already manually updated...could probably start with checking if the file was manually changed, don't scan it and assume the user has already updated it accordingly -> Done
 
 const core = require('@actions/core');
 const fs = require('fs');
@@ -26,8 +26,29 @@ function UpdateManuallyReview(path, learningPathFile)
   core.setOutput('manuallyReview', Array.from(manuallyReview).join(","));
 }
 
+function extractURLsFromString(str)
+{
+  // (http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-])
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const urls = str.match(urlRegex) || [];
+  return urls;
+}
+
 function CompareFiles(newLearningPathFileContentStr, repoURLToSearch, modifiedFilePaths, currLearningFilePath, learningPathFile)
 {
+  const urlsList = extractURLsFromString(newLearningPathFileContentStr);
+
+  for (let url of urlsList)
+  {
+    console.log("URL: " + url);
+  }
+
+
+
+
+
+
+
   var linkIndices = [];
   for(var pos = newLearningPathFileContentStr.indexOf(repoURLToSearch); pos !== -1; pos = newLearningPathFileContentStr.indexOf(repoURLToSearch, pos + 1)) {
       linkIndices.push(pos);
