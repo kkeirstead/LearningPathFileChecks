@@ -10,15 +10,15 @@ const fs = require('fs');
 var modifiedFiles = new Set(); // output
 var manuallyReview = new Set(); // output
 
-function UpdateModifiedFiles(path)
+function UpdateModifiedFiles(path, learningPathFilePath)
 {
-  modifiedFiles.add(path);
+  modifiedFiles.add(path + " (in " + learningPathFilePath + ")");
   core.setOutput('modifiedFiles', Array.from(modifiedFiles).join(","));
 }
 
-function UpdateManuallyReview(path)
+function UpdateManuallyReview(path, learningPathFilePath)
 {
-  manuallyReview.add(path);
+  manuallyReview.add(path + " (in " + learningPathFilePath + ")");
   core.setOutput('manuallyReview', Array.from(manuallyReview).join(","));
 }
 
@@ -73,12 +73,12 @@ const main = async () => {
 
             if (pathIndex !== -1)
             {
-              UpdateModifiedFiles(trimmedFilePath);
+              UpdateModifiedFiles(trimmedFilePath, currLearningFilePath);
 
               fs.readFile(mergePathPrefix + trimmedFilePath, (err, newContent) => {
                 if (err || learningPathFileContentStr === null || learningPathFileContentStr.length === 0)
                 {
-                  UpdateManuallyReview(trimmedFilePath);
+                  UpdateManuallyReview(trimmedFilePath, currLearningFilePath);
                 }
                 else if (hasLineNumber)
                 {
@@ -95,7 +95,7 @@ const main = async () => {
 
                       if (existingContentLines.length < lineNumber || newContentLines.length < lineNumber)
                       {
-                        UpdateManuallyReview(trimmedFilePath);
+                        UpdateManuallyReview(trimmedFilePath, currLearningFilePath);
                       }
                       else if (existingContentLines[lineNumber - 1].trim() !== newContentLines[lineNumber - 1].trim())
                       {
@@ -103,7 +103,7 @@ const main = async () => {
 
                         if (updatedLineNumber === 0) // accounts for the +1 increment
                         {
-                          UpdateManuallyReview(trimmedFilePath);
+                          UpdateManuallyReview(trimmedFilePath, currLearningFilePath);
                         }
                         else
                         {
