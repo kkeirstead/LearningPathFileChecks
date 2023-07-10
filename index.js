@@ -145,7 +145,7 @@ const main = async () => {
 
               if (existingLearningPathFileContentStr === newLearningPathFileContentStr)
               {
-                CompareFiles(newLearningPathFileContentStr, repoURLToSearch, modifiedFilePaths, currLearningFilePath)
+                CompareFiles(newLearningPathFileContentStr, repoURLToSearch, modifiedFilePaths, currLearningFilePath, learningPathFile)
               }
               else
               {
