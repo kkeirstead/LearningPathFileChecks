@@ -1,5 +1,5 @@
 // TODO:
-// Report link to learning path that needs to be manually reviewed
+// Report link to learning path that needs to be manually reviewed -> Done
 // Don't just look for ) as end of link character
 // Don't print this out every single time a change is made (or add a silencing mechanism)
 // When a broken line has multiple possible matches, handle that scenario instead of just picking the first one
@@ -10,15 +10,15 @@ const fs = require('fs');
 var modifiedFiles = new Set(); // output
 var manuallyReview = new Set(); // output
 
-function UpdateModifiedFiles(path, learningPathFilePath)
+function UpdateModifiedFiles(path, learningPathFile)
 {
-  modifiedFiles.add(path + " (in " + learningPathFilePath + ")");
+  modifiedFiles.add(path + " (in " + learningPathFile + ")");
   core.setOutput('modifiedFiles', Array.from(modifiedFiles).join(","));
 }
 
-function UpdateManuallyReview(path, learningPathFilePath)
+function UpdateManuallyReview(path, learningPathFile)
 {
-  manuallyReview.add(path + " (in " + learningPathFilePath + ")");
+  manuallyReview.add(path + " (in " + learningPathFile + ")");
   core.setOutput('manuallyReview', Array.from(manuallyReview).join(","));
 }
 
@@ -73,12 +73,12 @@ const main = async () => {
 
             if (pathIndex !== -1)
             {
-              UpdateModifiedFiles(trimmedFilePath, currLearningFilePath);
+              UpdateModifiedFiles(trimmedFilePath, learningPathFile);
 
               fs.readFile(mergePathPrefix + trimmedFilePath, (err, newContent) => {
                 if (err || learningPathFileContentStr === null || learningPathFileContentStr.length === 0)
                 {
-                  UpdateManuallyReview(trimmedFilePath, currLearningFilePath);
+                  UpdateManuallyReview(trimmedFilePath, learningPathFile);
                 }
                 else if (hasLineNumber)
                 {
@@ -95,7 +95,7 @@ const main = async () => {
 
                       if (existingContentLines.length < lineNumber || newContentLines.length < lineNumber)
                       {
-                        UpdateManuallyReview(trimmedFilePath, currLearningFilePath);
+                        UpdateManuallyReview(trimmedFilePath, learningPathFile);
                       }
                       else if (existingContentLines[lineNumber - 1].trim() !== newContentLines[lineNumber - 1].trim())
                       {
@@ -103,18 +103,27 @@ const main = async () => {
 
                         if (updatedLineNumber === 0) // accounts for the +1 increment
                         {
-                          UpdateManuallyReview(trimmedFilePath, currLearningFilePath);
+                          UpdateManuallyReview(trimmedFilePath, learningPathFile);
                         }
                         else
                         {
-                          var updatedLearningPathFileContent = learningPathFileContentStr.substring(0, startIndex + pathEndIndex + linePrefix.length) + updatedLineNumber + learningPathFileContentStr.substring(endIndex, learningPathFileContentStr.length);
+                          const alternateLineNumber = newContentLines.indexOf(existingContentLines[lineNumber - 1], updatedLineNumber) + 1;
 
-                          fs.writeFile(currLearningFilePath, updatedLearningPathFileContent, (err) => {
-                            if (err)
-                            {
-                              console.log("Failed to write: " + err);
-                            }
-                          });
+                          if (alternateLineNumber === 0)
+                          {
+                            UpdateManuallyReview(trimmedFilePath, learningPathFile);
+                          }
+                          else
+                          {
+                            var updatedLearningPathFileContent = learningPathFileContentStr.substring(0, startIndex + pathEndIndex + linePrefix.length) + updatedLineNumber + learningPathFileContentStr.substring(endIndex, learningPathFileContentStr.length);
+
+                            fs.writeFile(currLearningFilePath, updatedLearningPathFileContent, (err) => {
+                              if (err)
+                              {
+                                console.log("Failed to write: " + err);
+                              }
+                            });
+                          }
                         }
                       }
                     }
