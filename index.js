@@ -184,7 +184,7 @@ const main = async () => {
             {
               var existingLearningPathFileContentStr = existingLearningPathFileContent.toString();
 
-              if (existingLearningPathFileContentStr === newLearningPathFileContentStr)
+              if (true /*existingLearningPathFileContentStr === newLearningPathFileContentStr*/) // temp
               {
                 CompareFiles(newLearningPathFileContentStr, repoURLToSearch, modifiedFilePaths, currLearningFilePath, learningPathFile)
               }
