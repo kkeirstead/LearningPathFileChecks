@@ -1,5 +1,4 @@
 // TODO:
-// Report link to learning path that needs to be manually reviewed -> Done
 // Don't just look for ) as end of link character
 // Don't print this out every single time a change is made (or add a silencing mechanism)
 // When a broken line has multiple possible matches, handle that scenario instead of just picking the first one -> Done
@@ -22,7 +21,7 @@ function UpdateModifiedFiles(path, learningPathFile)
 
 function UpdateManuallyReview(path, learningPathFile, lineNumber = -1)
 {
-  const pathWithLineNumber = lineNumber === -1 ? path : path + "$L" + lineNumber;
+  const pathWithLineNumber = lineNumber === -1 ? path : path + "$L" + lineNumber.toString();
   manuallyReview.add(pathWithLineNumber + " (in " + learningPathFile + ")");
   core.setOutput('manuallyReview', Array.from(manuallyReview).join(","));
 }
@@ -53,6 +52,16 @@ function UpdateManuallyReview(path, learningPathFile, lineNumber = -1)
 //   return indices;
 // }
 
+// This is currently primitive - can make it better as-needed.
+function CheckForEndOfLink(str, startIndex)
+{
+  const illegalRegex = /^[^()\[\]{} ,]+$/ // not accounting for periods at end
+
+  const illegalCharIndex = str.search(illegalRegex);
+
+  return illegalCharIndex;
+}
+
 function CompareFiles(newLearningPathFileContentStr, repoURLToSearch, modifiedFilePaths, currLearningFilePath, learningPathFile)
 {
   //const linkIndices2 = extractURLsFromString(newLearningPathFileContentStr, repoURLToSearch);
@@ -64,13 +73,13 @@ function CompareFiles(newLearningPathFileContentStr, repoURLToSearch, modifiedFi
 
   for(let startIndex of linkIndices)
   {
-    const endIndex = newLearningPathFileContentStr.indexOf(')', startIndex); // should also check for any character that can't be in url
+    const endIndex = CheckForEndOfLink(newLearningPathFileContentStr, startIndex)
     const link = newLearningPathFileContentStr.substring(startIndex, endIndex);
 
     const indexOfLineNumber = link.indexOf(linePrefix);
     const hasLineNumber = indexOfLineNumber !== -1;
 
-    const pathStartIndex = link.indexOf("src"); // should just trim the prefix, since this might not always be the case?
+    const pathStartIndex = link.indexOf("src"); // should just trim the prefix, since this might not always be the case? -> paramaterize this
     const pathEndIndex = hasLineNumber ? indexOfLineNumber : endIndex;
 
     const trimmedFilePath = link.substring(pathStartIndex, pathEndIndex);
