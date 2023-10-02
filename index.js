@@ -21,8 +21,8 @@ function UpdateModifiedFiles(path, learningPathFile)
 
 function UpdateManuallyReview(path, learningPathFile, lineNumber = -1)
 {
-  console.log("Manually review: " + path + "|" + learningPathFile + "|" + lineNumber.toString());
-  const pathWithLineNumber = path + "$L" + lineNumber.toString(); // add unconditionally for testing
+  //console.log("Manually review: " + path + "|" + learningPathFile + "|" + lineNumber.toString());
+  const pathWithLineNumber = path + linePrefix + lineNumber.toString(); // add unconditionally for testing
   //const pathWithLineNumber = lineNumber === -1 ? path : path + "$L" + lineNumber.toString();
   manuallyReview.add(pathWithLineNumber + " (in " + learningPathFile + ")");
   core.setOutput('manuallyReview', Array.from(manuallyReview).join(","));
@@ -57,11 +57,13 @@ function UpdateManuallyReview(path, learningPathFile, lineNumber = -1)
 // This is currently primitive - can make it better as-needed.
 function CheckForEndOfLink(str, startIndex)
 {
+  return str.substr().indexOf(")"); // temporary
+  /*
   const illegalRegex = /^[^()\[\]{} ,]+$/ // not accounting for periods at end
 
   const illegalCharIndex = str.substr(startIndex).search(illegalRegex);
 
-  return illegalCharIndex;
+  return illegalCharIndex;*/
 }
 
 function CompareFiles(newLearningPathFileContentStr, repoURLToSearch, modifiedFilePaths, currLearningFilePath, learningPathFile)
