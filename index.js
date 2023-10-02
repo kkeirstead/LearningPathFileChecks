@@ -20,9 +20,10 @@ function UpdateModifiedFiles(path, learningPathFile)
   core.setOutput('modifiedFiles', Array.from(modifiedFiles).join(","));
 }
 
-function UpdateManuallyReview(path, learningPathFile)
+function UpdateManuallyReview(path, learningPathFile, lineNumber = -1)
 {
-  manuallyReview.add(path + " (in " + learningPathFile + ")");
+  const pathWithLineNumber = lineNumber === -1 ? path : path + "$L" + lineNumber;
+  manuallyReview.add(pathWithLineNumber + " (in " + learningPathFile + ")");
   core.setOutput('manuallyReview', Array.from(manuallyReview).join(","));
 }
 
@@ -32,21 +33,29 @@ function extractURLsFromString(str)
 
   // (http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-])
   const urlRegex = /(https?:\/\/[^\s]+)/g;
-  const urls = str.match(urlRegex) || [];
-  return urls;
+  //const urls = str.match(urlRegex) || [];
+  //return urls;
+
+  var indices = []
+  var match;
+
+  while ((match = urlRegex.exec(str)) !== null)
+  {
+    const url = match[0];
+
+    if (url.includes(repoURLToSearch))
+    {
+      indices.push(match.index);
+    }
+
+  }
+
+  return indices;
 }
 
 function CompareFiles(newLearningPathFileContentStr, repoURLToSearch, modifiedFilePaths, currLearningFilePath, learningPathFile)
 {
-  const urlsList = extractURLsFromString(newLearningPathFileContentStr);
-
-  console.log("Compare Files");
-
-  for (let url of urlsList)
-  {
-    console.log("URL: " + url);
-  }
-
+  const linkIndices2 = extractURLsFromString(newLearningPathFileContentStr, repoURLToSearch);
 
 
 
@@ -97,35 +106,31 @@ function CompareFiles(newLearningPathFileContentStr, repoURLToSearch, modifiedFi
 
               if (existingContentLines.length < lineNumber || newContentLines.length < lineNumber)
               {
-                UpdateManuallyReview(trimmedFilePath, learningPathFile);
+                UpdateManuallyReview(trimmedFilePath, learningPathFile, lineNumber);
               }
               else if (existingContentLines[lineNumber - 1].trim() !== newContentLines[lineNumber - 1].trim())
               {
-                const updatedLineNumber = newContentLines.indexOf(existingContentLines[lineNumber - 1]) + 1; // should check if there are multiple identical lines
+                const lastIndex = newContentLines.lastIndexOf(existingContentLines[lineNumber - 1]) + 1;
+                const firstIndex = newContentLines.indexOf(existingContentLines[lineNumber - 1]) + 1;
 
-                if (updatedLineNumber === 0) // accounts for the +1 increment
+                // Only a single instance of this line in the file - likely a good enough heuristic,
+                // though not perfect in certain edge cases.
+                var updatedLineNumber = lastIndex == firstIndex ? firstIndex : 0;
+
+                if (updatedLineNumber === 0)
                 {
-                  UpdateManuallyReview(trimmedFilePath, learningPathFile);
+                  UpdateManuallyReview(trimmedFilePath, learningPathFile, lineNumber);
                 }
                 else
                 {
-                  const alternateLineNumber = newContentLines.indexOf(existingContentLines[lineNumber - 1], updatedLineNumber) + 1;
+                  var updatedLearningPathFileContent = newLearningPathFileContentStr.substring(0, startIndex + pathEndIndex + linePrefix.length) + updatedLineNumber + newLearningPathFileContentStr.substring(endIndex, newLearningPathFileContentStr.length);
 
-                  if (alternateLineNumber !== 0)
-                  {
-                    UpdateManuallyReview(trimmedFilePath, learningPathFile);
-                  }
-                  else
-                  {
-                    var updatedLearningPathFileContent = newLearningPathFileContentStr.substring(0, startIndex + pathEndIndex + linePrefix.length) + updatedLineNumber + newLearningPathFileContentStr.substring(endIndex, newLearningPathFileContentStr.length);
-
-                    fs.writeFile(currLearningFilePath, updatedLearningPathFileContent, (err) => {
-                      if (err)
-                      {
-                        console.log("Failed to write: " + err);
-                      }
-                    });
-                  }
+                  fs.writeFile(currLearningFilePath, updatedLearningPathFileContent, (err) => {
+                    if (err)
+                    {
+                      console.log("Failed to write: " + err);
+                    }
+                  });
                 }
               }
             }
