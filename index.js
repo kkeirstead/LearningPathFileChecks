@@ -19,10 +19,15 @@ function UpdateModifiedFiles(path, learningPathFile)
   core.setOutput('modifiedFiles', Array.from(modifiedFiles).join(","));
 }
 
-function UpdateManuallyReview(path, learningPathFile, lineNumber = -1)
+function UpdateManuallyReview(path, learningPathIndex)
 {
-  const pathWithLineNumber = lineNumber === -1 ? path : path + "$L" + lineNumber.toString();
-  manuallyReview.add(pathWithLineNumber + " (in " + learningPathFile + ")");
+  UpdateManuallyReview(path, learningPathIndex, "");
+}
+
+function UpdateManuallyReview(path, learningPathFile, lineNumber)
+{
+  const pathWithLineNumber = lineNumber == "" ? path : path + "#L" + lineNumber;
+  manuallyReview.add(pathWithLineNumber + " in " + learningPathFile);
   core.setOutput('manuallyReview', Array.from(manuallyReview).join(","));
 }
 
