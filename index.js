@@ -21,12 +21,12 @@ function UpdateModifiedFiles(path, learningPathFile)
 
 function UpdateManuallyReview(path, learningPathIndex)
 {
-  UpdateManuallyReview(path, learningPathIndex, "");
+  UpdateManuallyReview(path, learningPathIndex, undefined);
 }
 
 function UpdateManuallyReview(path, learningPathFile, lineNumber)
 {
-  const pathWithLineNumber = lineNumber == "" ? path : path + "#L" + lineNumber;
+  const pathWithLineNumber = lineNumber == undefined ? path : path + "#L" + lineNumber;
   manuallyReview.add(pathWithLineNumber + " in " + learningPathFile);
   core.setOutput('manuallyReview', Array.from(manuallyReview).join(","));
 }
