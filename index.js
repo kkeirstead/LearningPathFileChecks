@@ -21,9 +21,7 @@ function UpdateModifiedFiles(path, learningPathFile)
 
 function UpdateManuallyReview(path, learningPathFile, lineNumber = -1)
 {
-  //console.log("Manually review: " + path + "|" + learningPathFile + "|" + lineNumber.toString());
-  const pathWithLineNumber = path + linePrefix + lineNumber.toString(); // add unconditionally for testing
-  //const pathWithLineNumber = lineNumber === -1 ? path : path + "$L" + lineNumber.toString();
+  const pathWithLineNumber = lineNumber === -1 ? path : path + "$L" + lineNumber.toString();
   manuallyReview.add(pathWithLineNumber + " (in " + learningPathFile + ")");
   core.setOutput('manuallyReview', Array.from(manuallyReview).join(","));
 }
