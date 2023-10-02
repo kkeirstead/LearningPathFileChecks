@@ -27,40 +27,35 @@ function UpdateManuallyReview(path, learningPathFile, lineNumber = -1)
   core.setOutput('manuallyReview', Array.from(manuallyReview).join(","));
 }
 
-function extractURLsFromString(str)
-{
-  console.log("Extract");
+// function extractURLsFromString(str)
+// {
+//   console.log("Extract");
 
-  // (http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-])
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
-  //const urls = str.match(urlRegex) || [];
-  //return urls;
+//   // (http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-])
+//   const urlRegex = /(https?:\/\/[^\s]+)/g;
+//   //const urls = str.match(urlRegex) || [];
+//   //return urls;
 
-  var indices = []
-  var match;
+//   var indices = []
+//   var match;
 
-  while ((match = urlRegex.exec(str)) !== null)
-  {
-    const url = match[0];
+//   while ((match = urlRegex.exec(str)) !== null)
+//   {
+//     const url = match[0];
 
-    if (url.includes(repoURLToSearch))
-    {
-      indices.push(match.index);
-    }
+//     if (url.includes(repoURLToSearch))
+//     {
+//       indices.push(match.index);
+//     }
 
-  }
+//   }
 
-  return indices;
-}
+//   return indices;
+// }
 
 function CompareFiles(newLearningPathFileContentStr, repoURLToSearch, modifiedFilePaths, currLearningFilePath, learningPathFile)
 {
-  const linkIndices2 = extractURLsFromString(newLearningPathFileContentStr, repoURLToSearch);
-
-
-
-
-
+  //const linkIndices2 = extractURLsFromString(newLearningPathFileContentStr, repoURLToSearch);
 
   var linkIndices = [];
   for(var pos = newLearningPathFileContentStr.indexOf(repoURLToSearch); pos !== -1; pos = newLearningPathFileContentStr.indexOf(repoURLToSearch, pos + 1)) {
