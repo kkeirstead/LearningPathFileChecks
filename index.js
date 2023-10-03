@@ -28,7 +28,7 @@ function UpdateModifiedFiles(fileName, path, learningPathFile)
 
   modifiedFilesDict[path].add(learningPathFile);
 
-  modifiedFiles = [];
+  modifiedFiles = new Set();
   for (currPath in modifiedFilesDict)
   {
     const fileName = modifiedFilesUrlToFileName[currPath];
