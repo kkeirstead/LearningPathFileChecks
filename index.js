@@ -20,14 +20,15 @@ function UpdateModifiedFiles(path, learningPathFile)
   core.setOutput('modifiedFiles', Array.from(modifiedFiles).join(","));
 }
 
-function UpdateManuallyReview(path, learningPathIndex)
+function UpdateManuallyReview(fileName, path, learningPathFile)
 {
-  UpdateManuallyReview(path, learningPathIndex, undefined);
+  UpdateManuallyReview(fileName, path, learningPathFile, undefined);
 }
 
-function UpdateManuallyReview(path, learningPathFile, lineNumber)
+function UpdateManuallyReview(fileName, path, learningPathFile, lineNumber)
 {
-  const pathWithLineNumber = lineNumber == undefined ? path : path + linePrefix + lineNumber;
+  var pathWithLineNumber = "[" + fileName + "]" + "(" + path + ")"
+  pathWithLineNumber = lineNumber == undefined ? pathWithLineNumber : pathWithLineNumber + " " + linePrefix + lineNumber;
   manuallyReview.add(pathWithLineNumber + " | " + "**" + learningPathFile + "**");
   core.setOutput('manuallyReview', Array.from(manuallyReview).join(","));
 }
@@ -114,6 +115,8 @@ function CompareFiles(newLearningPathFileContentStr, repoURLToSearch, modifiedFi
         {
           fs.readFile(headPathPrefix + trimmedFilePath, (err, existingContent) => {
           
+            const fileName = trimmedFilePath.substring(trimmedFilePath.lastIndexOf('/') + 1);
+
             // If the file previously didn't exist, then we don't need to check line numbers
             if (err || existingContent === null || existingContent.length === 0) {}
             else
@@ -125,7 +128,7 @@ function CompareFiles(newLearningPathFileContentStr, repoURLToSearch, modifiedFi
 
               if (existingContentLines.length < lineNumber || newContentLines.length < lineNumber)
               {
-                UpdateManuallyReview(trimmedFilePath, learningPathFile, lineNumber);
+                UpdateManuallyReview(fileName, link, learningPathFile);
               }
               else if (existingContentLines[lineNumber - 1].trim() !== newContentLines[lineNumber - 1].trim())
               {
@@ -138,13 +141,11 @@ function CompareFiles(newLearningPathFileContentStr, repoURLToSearch, modifiedFi
 
                 if (updatedLineNumber === 0)
                 {
-                  UpdateManuallyReview(trimmedFilePath, learningPathFile, lineNumber);
+                  UpdateManuallyReview(fileName, link, learningPathFile, lineNumber);
                 }
                 else
                 {
-                  var updatedLearningPathFileContent = newLearningPathFileContentStr.substring(0, startIndex + pathEndIndex + linePrefix.length) + updatedLineNumber + newLearningPathFileContentStr.substring(endIndex, newLearningPathFileContentStr.length);
-
-                  const fileName = trimmedFilePath.substring(trimmedFilePath.lastIndexOf('/') + 1);
+                  //var updatedLearningPathFileContent = newLearningPathFileContentStr.substring(0, startIndex + pathEndIndex + linePrefix.length) + updatedLineNumber + newLearningPathFileContentStr.substring(endIndex, newLearningPathFileContentStr.length);
 
                   // use link instead of trimmedfilepath so it's clickable?
                   UpdateSuggestions(fileName, link, learningPathFile, lineNumber, updatedLineNumber)
