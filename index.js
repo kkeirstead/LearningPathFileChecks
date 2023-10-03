@@ -10,13 +10,37 @@ const mergePathPrefix = "merge/";
 const headPathPrefix = "head/";
 const linePrefix = "#L";
 
+modifiedFilesDict = {};
+modifiedFilesUrlToFileName = {};
+
 var modifiedFiles = new Set(); // output
 var manuallyReview = new Set(); // output
 var suggestions = new Set(); // output
 
-function UpdateModifiedFiles(path, learningPathFile)
+function UpdateModifiedFiles(fileName, path, learningPathFile)
 {
-  modifiedFiles.add(path + " | " + "**" + learningPathFile + "**");
+  modifiedFilesUrlToFileName[path] = fileName;
+
+  if (modifiedFilesDict[path] !== undefined)
+  {
+    modifiedFilesDict[path].add(learningPathFile);
+  }
+  else
+  {
+    modifiedFilesDict[path] = new Set([learningPathFile]);
+  }
+
+  modifiedFilesDict[path] = learningPathFile;
+
+  modifiedFiles = [];
+  for (currPath in modifiedFilesDict)
+  {
+    const fileName = modifiedFilesUrlToFileName[currPath];
+    const formattedFileNameAndUrl = "[" + fileName + "]" + "(" + currPath + ")"
+
+    modifiedFiles = (formattedFileNameAndUrl + " | " + "**" + modifiedFilesDict[key].join(" ") + "**");
+  }
+
   core.setOutput('modifiedFiles', Array.from(modifiedFiles).join(","));
 }
 
@@ -39,32 +63,6 @@ function UpdateSuggestions(fileName, path, learningPathFile, oldLineNumber, newL
   suggestions.add(pathWithLineNumber + " | " + "**" + learningPathFile + "**");
   core.setOutput('suggestions', Array.from(suggestions).join(","));
 }
-
-// function extractURLsFromString(str)
-// {
-//   console.log("Extract");
-
-//   // (http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-])
-//   const urlRegex = /(https?:\/\/[^\s]+)/g;
-//   //const urls = str.match(urlRegex) || [];
-//   //return urls;
-
-//   var indices = []
-//   var match;
-
-//   while ((match = urlRegex.exec(str)) !== null)
-//   {
-//     const url = match[0];
-
-//     if (url.includes(repoURLToSearch))
-//     {
-//       indices.push(match.index);
-//     }
-
-//   }
-
-//   return indices;
-// }
 
 // This is currently primitive - can make it better as-needed.
 function CheckForEndOfLink(str, startIndex)
@@ -102,6 +100,8 @@ function CompareFiles(newLearningPathFileContentStr, repoURLToSearch, modifiedFi
 
     const pathIndex = modifiedFilePaths.indexOf(trimmedFilePath)
 
+    const fileName = trimmedFilePath.substring(trimmedFilePath.lastIndexOf('/') + 1);
+
     if (pathIndex !== -1)
     {
       UpdateModifiedFiles(trimmedFilePath, learningPathFile);
@@ -115,8 +115,6 @@ function CompareFiles(newLearningPathFileContentStr, repoURLToSearch, modifiedFi
         {
           fs.readFile(headPathPrefix + trimmedFilePath, (err, existingContent) => {
           
-            const fileName = trimmedFilePath.substring(trimmedFilePath.lastIndexOf('/') + 1);
-
             // If the file previously didn't exist, then we don't need to check line numbers
             if (err || existingContent === null || existingContent.length === 0) {}
             else
@@ -145,17 +143,7 @@ function CompareFiles(newLearningPathFileContentStr, repoURLToSearch, modifiedFi
                 }
                 else
                 {
-                  //var updatedLearningPathFileContent = newLearningPathFileContentStr.substring(0, startIndex + pathEndIndex + linePrefix.length) + updatedLineNumber + newLearningPathFileContentStr.substring(endIndex, newLearningPathFileContentStr.length);
-
-                  // use link instead of trimmedfilepath so it's clickable?
                   UpdateSuggestions(fileName, link, learningPathFile, lineNumber, updatedLineNumber)
-                  /*
-                  fs.writeFile(currLearningFilePath, updatedLearningPathFileContent, (err) => {
-                    if (err)
-                    {
-                      console.log("Failed to write: " + err);
-                    }
-                  });*/
                 }
               }
             }
