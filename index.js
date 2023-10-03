@@ -1,6 +1,6 @@
 // TODO:
 // Don't just look for ) as end of link character
-// Don't print this out every single time a change is made (or add a silencing mechanism)
+// Don't print this out every single time a change is made (or add a silencing mechanism) -> look for identical comment that already exists?
 // When a broken line has multiple possible matches, handle that scenario instead of just picking the first one -> Done
 // Handle cases where the learning path was already manually updated...could probably start with checking if the file was manually changed, don't scan it and assume the user has already updated it accordingly -> Done
 
@@ -27,14 +27,14 @@ function UpdateManuallyReview(path, learningPathIndex)
 
 function UpdateManuallyReview(path, learningPathFile, lineNumber)
 {
-  const pathWithLineNumber = lineNumber == undefined ? path : path + "#L" + lineNumber;
+  const pathWithLineNumber = lineNumber == undefined ? path : path + linePrefix + lineNumber;
   manuallyReview.add(pathWithLineNumber + " | " + "**" + learningPathFile + "**");
   core.setOutput('manuallyReview', Array.from(manuallyReview).join(","));
 }
 
-function UpdateSuggestions(path, learningPathFile, oldLineNumber, newLineNumber)
+function UpdateSuggestions(fileName, path, learningPathFile, oldLineNumber, newLineNumber)
 {
-  const pathWithLineNumber = path + "#L" + oldLineNumber + " ----> " + "#L" + newLineNumber;
+  const pathWithLineNumber = "[" + fileName + "]" + "(" + path + ")" + " " + linePrefix + oldLineNumber + " --> " + linePrefix + newLineNumber;
   suggestions.add(pathWithLineNumber + " | " + "**" + learningPathFile + "**");
   core.setOutput('suggestions', Array.from(suggestions).join(","));
 }
@@ -144,7 +144,10 @@ function CompareFiles(newLearningPathFileContentStr, repoURLToSearch, modifiedFi
                 {
                   var updatedLearningPathFileContent = newLearningPathFileContentStr.substring(0, startIndex + pathEndIndex + linePrefix.length) + updatedLineNumber + newLearningPathFileContentStr.substring(endIndex, newLearningPathFileContentStr.length);
 
-                  UpdateSuggestions(trimmedFilePath, learningPathFile, lineNumber, updatedLineNumber)
+                  const fileName = trimmedFilePath.substring(trimmedFilePath.lastIndexOf('/') + 1);
+
+                  // use link instead of trimmedfilepath so it's clickable?
+                  UpdateSuggestions(fileName, link, learningPathFile, lineNumber, updatedLineNumber)
                   /*
                   fs.writeFile(currLearningFilePath, updatedLearningPathFileContent, (err) => {
                     if (err)
