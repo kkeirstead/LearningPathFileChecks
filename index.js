@@ -21,16 +21,12 @@ function UpdateModifiedFiles(fileName, path, learningPathFile)
 {
   modifiedFilesUrlToFileName[path] = fileName;
 
-  if (modifiedFilesDict[path] !== undefined)
+  if (modifiedFilesDict[path] === undefined)
   {
-    modifiedFilesDict[path].add(learningPathFile);
-  }
-  else
-  {
-    modifiedFilesDict[path] = new Set([learningPathFile]);
+    modifiedFilesDict[path] = new Set();;
   }
 
-  modifiedFilesDict[path] = learningPathFile;
+  modifiedFilesDict[path].add(learningPathFile);
 
   modifiedFiles = [];
   for (currPath in modifiedFilesDict)
