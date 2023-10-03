@@ -104,12 +104,12 @@ function CompareFiles(newLearningPathFileContentStr, repoURLToSearch, modifiedFi
 
     if (pathIndex !== -1)
     {
-      UpdateModifiedFiles(trimmedFilePath, learningPathFile);
+      UpdateModifiedFiles(fileName, trimmedFilePath, learningPathFile);
 
       fs.readFile(mergePathPrefix + trimmedFilePath, (err, newContent) => {
         if (err || newLearningPathFileContentStr === null || newLearningPathFileContentStr.length === 0)
         {
-          UpdateManuallyReview(trimmedFilePath, learningPathFile);
+          UpdateManuallyReview(fileName, trimmedFilePath, learningPathFile);
         }
         else if (hasLineNumber)
         {
