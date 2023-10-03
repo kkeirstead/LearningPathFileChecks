@@ -32,10 +32,10 @@ function UpdateManuallyReview(path, learningPathFile, lineNumber)
   core.setOutput('manuallyReview', Array.from(manuallyReview).join(","));
 }
 
-function UpdateSuggestions(path, oldLineNumber, newLineNumber)
+function UpdateSuggestions(path, learningPathFile, oldLineNumber, newLineNumber)
 {
-  const pathWithLineNumber = path + "#L" + oldLineNumber + " ----> " + path + "#L" + oldLineNumber;
-  manuallyReview.add(pathWithLineNumber + " in " + learningPathFile);
+  const pathWithLineNumber = path + "#L" + oldLineNumber + " ----> " + path + "#L" + newLineNumber;
+  suggestions.add(pathWithLineNumber + " in " + learningPathFile);
   core.setOutput('suggestions', Array.from(suggestions).join(","));
 }
 
@@ -144,7 +144,7 @@ function CompareFiles(newLearningPathFileContentStr, repoURLToSearch, modifiedFi
                 {
                   var updatedLearningPathFileContent = newLearningPathFileContentStr.substring(0, startIndex + pathEndIndex + linePrefix.length) + updatedLineNumber + newLearningPathFileContentStr.substring(endIndex, newLearningPathFileContentStr.length);
 
-                  UpdateSuggestions(trimmedFilePath, lineNumber, updatedLineNumber)
+                  UpdateSuggestions(trimmedFilePath, learningPathFile, lineNumber, updatedLineNumber)
                   /*
                   fs.writeFile(currLearningFilePath, updatedLearningPathFileContent, (err) => {
                     if (err)
