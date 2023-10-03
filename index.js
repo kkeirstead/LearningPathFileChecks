@@ -34,7 +34,7 @@ function UpdateModifiedFiles(fileName, path, learningPathFile)
     const fileName = modifiedFilesUrlToFileName[currPath];
     const formattedFileNameAndUrl = "[" + fileName + "]" + "(" + currPath + ")"
 
-    modifiedFiles = (formattedFileNameAndUrl + " | " + "**" + Array.from(modifiedFilesDict[currPath]).join(" ") + "**");
+    modifiedFiles.add(formattedFileNameAndUrl + " | " + "**" + Array.from(modifiedFilesDict[currPath]).join(" ") + "**");
   }
 
   core.setOutput('modifiedFiles', Array.from(modifiedFiles).join(","));
