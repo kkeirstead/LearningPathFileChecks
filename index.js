@@ -16,7 +16,7 @@ var suggestions = new Set(); // output
 
 function UpdateModifiedFiles(path, learningPathFile)
 {
-  modifiedFiles.add(path + " (in " + learningPathFile + ")");
+  modifiedFiles.add(path + " | " + "**" + learningPathFile + "**");
   core.setOutput('modifiedFiles', Array.from(modifiedFiles).join(","));
 }
 
@@ -28,14 +28,14 @@ function UpdateManuallyReview(path, learningPathIndex)
 function UpdateManuallyReview(path, learningPathFile, lineNumber)
 {
   const pathWithLineNumber = lineNumber == undefined ? path : path + "#L" + lineNumber;
-  manuallyReview.add(pathWithLineNumber + " in " + learningPathFile);
+  manuallyReview.add(pathWithLineNumber + " | " + "**" + learningPathFile + "**");
   core.setOutput('manuallyReview', Array.from(manuallyReview).join(","));
 }
 
 function UpdateSuggestions(path, learningPathFile, oldLineNumber, newLineNumber)
 {
-  const pathWithLineNumber = path + "#L" + oldLineNumber + " ----> " + path + "#L" + newLineNumber;
-  suggestions.add(pathWithLineNumber + " in " + learningPathFile);
+  const pathWithLineNumber = path + "#L" + oldLineNumber + " ----> " + "#L" + newLineNumber;
+  suggestions.add(pathWithLineNumber + " | " + "**" + learningPathFile + "**");
   core.setOutput('suggestions', Array.from(suggestions).join(","));
 }
 
