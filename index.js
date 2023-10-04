@@ -11,8 +11,8 @@ const linePrefix = "#L";
 modifiedFilesDict = {};
 modifiedFilesUrlToFileName = {};
 
-var manuallyReview = new Set(); // output
-var suggestions = new Set(); // output
+var manuallyReview = new Set();
+var suggestions = new Set();
 
 function UpdateModifiedFiles(fileName, path, learningPathFile)
 {
@@ -50,11 +50,6 @@ function SetOutput(outputName, outputSet)
 
 function AssembleOutput(fileName, path, oldLineNumber, newLineNumber, learningPathFile)
 {
-  return AssembleCodeFileLink(fileName, path, oldLineNumber, newLineNumber) + " | " + "**" + learningPathFile + "**"
-}
-
-function AssembleCodeFileLink(fileName, path, oldLineNumber, newLineNumber)
-{
   var codeFileLink = "[" + fileName + "]" + "(" + path + ")"
   if (oldLineNumber !== undefined)
   {
@@ -64,7 +59,7 @@ function AssembleCodeFileLink(fileName, path, oldLineNumber, newLineNumber)
     }
   }
 
-  return codeFileLink;
+  return codeFileLink + " | " + "**" + learningPathFile + "**"
 }
 
 // This is currently primitive - can make it better as-needed.
@@ -79,19 +74,19 @@ function CheckForEndOfLink(str, startIndex)
   return illegalCharIndex;*/
 }
 
-function CompareFiles(newLearningPathFileContentStr, existingLearningPathFileContentStr, repoURLToSearch, modifiedFilePaths, learningPathFile)
+function CompareFiles(mergeLearningPathFileContentStr, headLearningPathFileContentStr, repoURLToSearch, modifiedFilePaths, learningPathFile)
 {
   var linkIndices = [];
-  for(var pos = existingLearningPathFileContentStr.indexOf(repoURLToSearch); pos !== -1; pos = existingLearningPathFileContentStr.indexOf(repoURLToSearch, pos + 1)) {
+  for(var pos = headLearningPathFileContentStr.indexOf(repoURLToSearch); pos !== -1; pos = headLearningPathFileContentStr.indexOf(repoURLToSearch, pos + 1)) {
       linkIndices.push(pos);
   }
 
   for(let startIndex of linkIndices)
   {
-    const endIndex = startIndex + CheckForEndOfLink(existingLearningPathFileContentStr, startIndex)
-    const link = existingLearningPathFileContentStr.substring(startIndex, endIndex);
+    const endIndex = startIndex + CheckForEndOfLink(headLearningPathFileContentStr, startIndex)
+    const link = headLearningPathFileContentStr.substring(startIndex, endIndex);
 
-    const learningPathFileLineNumber = existingLearningPathFileContentStr.substring(0, startIndex).split("\n").length;
+    const learningPathFileLineNumber = headLearningPathFileContentStr.substring(0, startIndex).split("\n").length;
     const learningPathFileAndLineNumber = learningPathFile + " " + linePrefix + learningPathFileLineNumber;
 
     const indexOfLineNumber = link.indexOf(linePrefix);
@@ -112,32 +107,32 @@ function CompareFiles(newLearningPathFileContentStr, existingLearningPathFileCon
 
       UpdateModifiedFiles(fileName, strippedLink, learningPathFile);
 
-      fs.readFile(mergePathPrefix + trimmedFilePath, (err, newContent) => {
-        if (err || newLearningPathFileContentStr === null || newLearningPathFileContentStr.length === 0)
+      fs.readFile(mergePathPrefix + trimmedFilePath, (err, mergeContent) => {
+        if (err || mergeLearningPathFileContentStr === null || mergeLearningPathFileContentStr.length === 0)
         {
           UpdateManuallyReview(fileName, link, learningPathFileAndLineNumber, learningPathFileLineNumber);
         }
         else if (hasLineNumber)
         {
-          fs.readFile(headPathPrefix + trimmedFilePath, (err, existingContent) => {
+          fs.readFile(headPathPrefix + trimmedFilePath, (err, headContent) => {
           
             // If the file previously didn't exist, then we don't need to check line numbers
-            if (err || existingContent === null || existingContent.length === 0) {}
+            if (err || headContent === null || headContent.length === 0) {}
             else
             {
               const lineNumber = Number(link.substring(indexOfLineNumber + linePrefix.length, link.length));
 
-              const newContentLines = newContent.toString().split("\n");
-              const existingContentLines = existingContent.toString().split("\n");
+              const mergeContentLines = mergeContent.toString().split("\n");
+              const headContentLines = headContent.toString().split("\n");
 
-              if (existingContentLines.length < lineNumber || newContentLines.length < lineNumber)
+              if (headContentLines.length < lineNumber || mergeContentLines.length < lineNumber)
               {
                 UpdateManuallyReview(fileName, link, learningPathFileAndLineNumber, learningPathFileLineNumber);
               }
-              else if (existingContentLines[lineNumber - 1].trim() !== newContentLines[lineNumber - 1].trim())
+              else if (headContentLines[lineNumber - 1].trim() !== mergeContentLines[lineNumber - 1].trim())
               {
-                const lastIndex = newContentLines.lastIndexOf(existingContentLines[lineNumber - 1]) + 1;
-                const firstIndex = newContentLines.indexOf(existingContentLines[lineNumber - 1]) + 1;
+                const lastIndex = mergeContentLines.lastIndexOf(headContentLines[lineNumber - 1]) + 1;
+                const firstIndex = mergeContentLines.indexOf(headContentLines[lineNumber - 1]) + 1;
 
                 // Only a single instance of this line in the file - likely a good enough heuristic,
                 // though not perfect in certain edge cases.
@@ -163,53 +158,25 @@ function CompareFiles(newLearningPathFileContentStr, existingLearningPathFileCon
 const main = async () => {
 
   try {
+    const learningPathDirectory = core.getInput('learningPathsDirectory', { required: true });
     const repoURLToSearch = core.getInput('repoURLToSearch', { required: true });
-    const existingLearningPathsDirectory = "head/" + core.getInput('learningPathsDirectory', { required: true });
-    const newLearningPathsDirectory = "merge/" + core.getInput('learningPathsDirectory', { required: true });
+    const headLearningPathsDirectory = headPathPrefix + learningPathDirectory;
     const paths = core.getInput('paths', {required: false});
     
-    if (paths === null && paths.trim() === "")
-    {
-      return;
-    }
-
-    var modifiedFilePaths = paths.split(' ');
+    if (paths === null && paths.trim() === "") { return }
 
     // Scan each file in the learningPaths directory
-    fs.readdir(newLearningPathsDirectory, (err, files) => {
+    fs.readdir(headLearningPathsDirectory, (err, files) => {
       files.forEach(learningPathFile => {
 
-        const currLearningFilePath = newLearningPathsDirectory + "/" + learningPathFile
-        const existingLearningFilePath = existingLearningPathsDirectory + "/" + learningPathFile
+        const headLearningFilePath = headLearningPathsDirectory + "/" + learningPathFile
 
-        console.log("LearningPathFile: " + learningPathFile);
-        console.log("LearningPathFile URL: " + repoURLToSearch + learningPathFile)
-
-        fs.readFile(currLearningFilePath, (err, newLearningPathFileContent) => {
-          if (err) throw err;
-
-          var newLearningPathFileContentStr = newLearningPathFileContent.toString();
-
-          fs.readFile(existingLearningFilePath, (err, existingLearningPathFileContent) => {
-            if (existingLearningPathFileContent !== null && existingLearningPathFileContent.length > 0)
-            {
-              var existingLearningPathFileContentStr = existingLearningPathFileContent.toString();
-
-              if (true /*existingLearningPathFileContentStr === newLearningPathFileContentStr*/) // temp
-              {
-                CompareFiles(newLearningPathFileContentStr, existingLearningPathFileContentStr, repoURLToSearch, modifiedFilePaths, learningPathFile)
-              }
-              else
-              {
-                // User manually made changes - assume that means they've already updated the file accordingly
-              }
-            }
-            else
-            {
-              // do nothing?
-              //CompareFiles(newLearningPathFileContentStr, existingLearningPathFileContentStr, repoURLToSearch, modifiedFilePaths, learningPathFile)
-            }
-          });
+        fs.readFile(headLearningFilePath, (err, headLearningPathFileContent) => {
+          if (headLearningPathFileContent !== null && headLearningPathFileContent.length > 0)
+          {
+            const modifiedFilePaths = paths.split(' ');
+            CompareFiles(mergeLearningPathFileContentStr, headLearningPathFileContent.toString(), repoURLToSearch, modifiedFilePaths, learningPathFile)
+          }
         });
       });
     });
