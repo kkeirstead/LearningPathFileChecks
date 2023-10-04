@@ -53,13 +53,18 @@ function AssembleOutput(fileName, path, oldLineNumber, newLineNumber, learningPa
   var codeFileLink = "[" + fileName + "]" + "(" + path + ")"
   if (oldLineNumber !== undefined)
   {
-    codeFileLink += " " + linePrefix + oldLineNumber;
+    codeFileLink = AppendLineNumber(codeFileLink, oldLineNumber);
     if (newLineNumber !== undefined) {
       codeFileLink += " --> " + linePrefix + newLineNumber;
     }
   }
 
   return codeFileLink + " | " + "**" + learningPathFile + "**"
+}
+
+function AppendLineNumber(text, lineNumber)
+{
+  return text + " " + linePrefix + lineNumber;
 }
 
 // This is currently primitive - can make it better as-needed.
@@ -87,12 +92,12 @@ function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedF
     const link = headLearningPathFileContentStr.substring(startIndex, endIndex);
 
     const learningPathFileLineNumber = headLearningPathFileContentStr.substring(0, startIndex).split("\n").length;
-    const learningPathFileAndLineNumber = learningPathFile + " " + linePrefix + learningPathFileLineNumber;
+    const learningPathFileAndLineNumber = AppendLineNumber(learningPathFile, learningPathFileLineNumber)
 
     const indexOfLineNumber = link.indexOf(linePrefix);
     const hasLineNumber = indexOfLineNumber !== -1;
 
-    const pathStartIndex = link.indexOf("src"); // should just trim the prefix, since this might not always be the case? -> paramaterize this
+    const pathStartIndex = link.indexOf("src"); // should just trim the prefix, since this might not always be the case? -> paramaterize this -> should this be more flexible, i.e. to deal with eng folder?
     const pathEndIndex = hasLineNumber ? indexOfLineNumber : endIndex;
 
     const trimmedFilePath = link.substring(pathStartIndex, pathEndIndex);
@@ -134,15 +139,11 @@ function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedF
                 const lastIndex = mergeContentLines.lastIndexOf(headContentLines[lineNumber - 1]) + 1;
                 const firstIndex = mergeContentLines.indexOf(headContentLines[lineNumber - 1]) + 1;
 
-                // Only a single instance of this line in the file - likely a good enough heuristic,
-                // though not perfect in certain edge cases.
-                var updatedLineNumber = lastIndex == firstIndex ? firstIndex : 0;
-
-                if (updatedLineNumber === 0)
+                if (lastIndex != firstIndex) // Multiple matches
                 {
                   UpdateManuallyReview(fileName, link, learningPathFileAndLineNumber, lineNumber);
                 }
-                else
+                else // not a perfect heuristic, but should be good enough for most cases
                 {
                   UpdateSuggestions(fileName, link, learningPathFileAndLineNumber, lineNumber, updatedLineNumber)
                 }
