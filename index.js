@@ -97,13 +97,14 @@ function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedP
 
     const trimmedFilePath = link.substring(pathStartIndex, pathEndIndex);
 
-    if (modifiedPRFiles.indexOf(trimmedFilePath))
+    if (modifiedPRFiles.includes(trimmedFilePath))
     {
       const fileName = trimmedFilePath.substring(trimmedFilePath.lastIndexOf('/') + 1);
       const simplifiedLink = hasLineNumber ? link.substring(0, indexOfLineNumber) : link;
 
       UpdateModifiedFiles(fileName, simplifiedLink, learningPathFile);
 
+      console.log("Link: " + link);
       console.log("Read Merge File: " + mergePathPrefix + trimmedFilePath);
       var mergeContent = fs.readFileSync(mergePathPrefix + trimmedFilePath, "utf8")
       if (!mergeContent)
