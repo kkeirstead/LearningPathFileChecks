@@ -1,8 +1,6 @@
 // TODO:
 // Don't just look for ) as end of link character
 // Don't print this out every single time a change is made (or add a silencing mechanism) -> look for identical comment that already exists? -> for potential reversions, maybe only scan the most recent LPSC check?
-// When a broken line has multiple possible matches, handle that scenario instead of just picking the first one -> Done
-// Handle cases where the learning path was already manually updated...could probably start with checking if the file was manually changed, don't scan it and assume the user has already updated it accordingly -> Done
 
 const core = require('@actions/core');
 const fs = require('fs');
@@ -13,7 +11,6 @@ const linePrefix = "#L";
 modifiedFilesDict = {};
 modifiedFilesUrlToFileName = {};
 
-var modifiedFiles = new Set(); // output
 var manuallyReview = new Set(); // output
 var suggestions = new Set(); // output
 
@@ -21,43 +18,55 @@ function UpdateModifiedFiles(fileName, path, learningPathFile)
 {
   modifiedFilesUrlToFileName[path] = fileName;
 
-  if (modifiedFilesDict[path] === undefined)
-  {
-    modifiedFilesDict[path] = new Set();;
-  }
-
+  modifiedFilesDict[path] = modifiedFilesDict[path] ? modifiedFilesDict[path] : new Set();;
   modifiedFilesDict[path].add(learningPathFile);
 
-  modifiedFiles = new Set();
+  var modifiedFiles = new Set();
   for (currPath in modifiedFilesDict)
   {
     const fileName = modifiedFilesUrlToFileName[currPath];
-    const formattedFileNameAndUrl = "[" + fileName + "]" + "(" + currPath + ")"
+    const codeFileLink = AssembleCodeFileLink(fileName, currPath);
 
-    modifiedFiles.add(formattedFileNameAndUrl + " | " + "**" + Array.from(modifiedFilesDict[currPath]).join(" ") + "**");
+    modifiedFiles.add(AssembleOutput(codeFileLink, Array.from(modifiedFilesDict[currPath]).join(" ")));
   }
 
-  core.setOutput('modifiedFiles', Array.from(modifiedFiles).join(","));
+  SetOutput('modifiedFiles', modifiedFiles)
 }
 
-function UpdateManuallyReview(fileName, path, learningPathFile)
+function UpdateManuallyReview(fileName, path, learningPathFile, lineNumber = undefined)
 {
-  UpdateManuallyReview(fileName, path, learningPathFile, undefined);
-}
-
-function UpdateManuallyReview(fileName, path, learningPathFile, lineNumber)
-{
-  var pathWithLineNumber = "[" + fileName + "]" + "(" + path + ")"
-  pathWithLineNumber = lineNumber == undefined ? pathWithLineNumber : pathWithLineNumber + " " + linePrefix + lineNumber;
-  manuallyReview.add(pathWithLineNumber + " | " + "**" + learningPathFile + "**");
-  core.setOutput('manuallyReview', Array.from(manuallyReview).join(","));
+  manuallyReview.add(AssembleOutput(fileName, path, lineNumber, undefined, learningPathFile));
+  SetOutput('manuallyReview', manuallyReview)
 }
 
 function UpdateSuggestions(fileName, path, learningPathFile, oldLineNumber, newLineNumber)
 {
-  const pathWithLineNumber = "[" + fileName + "]" + "(" + path + ")" + " " + linePrefix + oldLineNumber + " --> " + linePrefix + newLineNumber;
-  suggestions.add(pathWithLineNumber + " | " + "**" + learningPathFile + "**");
-  core.setOutput('suggestions', Array.from(suggestions).join(","));
+  suggestions.add(AssembleOutput(fileName, path, oldLineNumber, newLineNumber, learningPathFile));
+  SetOutput('suggestions', suggestions)
+}
+
+function SetOutput(outputName, outputSet)
+{
+  core.setOutput(outputName, Array.from(outputSet).join(","));
+}
+
+function AssembleCodeFileLink(fileName, path, oldLineNumber, newLineNumber)
+{
+  var codeFileLink = "[" + fileName + "]" + "(" + path + ")"
+  if (oldLineNumber)
+  {
+    codeFileLink += " " + linePrefix + oldLineNumber;
+    if (newLineNumber) {
+      codeFileLink += " --> " + linePrefix + newLineNumber;
+    }
+  }
+
+  return codeFileLink;
+}
+
+function AssembleOutput(fileName, path, oldLineNumber, newLineNumber, learningPathFile)
+{
+  return AssembleCodeFileLink(fileName, path, oldLineNumber, newLineNumber) + " | " + "**" + learningPathFile + "**"
 }
 
 // This is currently primitive - can make it better as-needed.
