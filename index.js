@@ -25,9 +25,7 @@ function UpdateModifiedFiles(fileName, path, learningPathFile)
   for (currPath in modifiedFilesDict)
   {
     const fileName = modifiedFilesUrlToFileName[currPath];
-    const codeFileLink = AssembleCodeFileLink(fileName, currPath);
-
-    modifiedFiles.add(AssembleOutput(codeFileLink, Array.from(modifiedFilesDict[currPath]).join(" ")));
+    modifiedFiles.add(AssembleOutput(fileName, currPath, undefined, undefined, Array.from(modifiedFilesDict[currPath]).join(" ")));
   }
 
   SetOutput('modifiedFiles', modifiedFiles)
@@ -50,23 +48,23 @@ function SetOutput(outputName, outputSet)
   core.setOutput(outputName, Array.from(outputSet).join(","));
 }
 
+function AssembleOutput(fileName, path, oldLineNumber, newLineNumber, learningPathFile)
+{
+  return AssembleCodeFileLink(fileName, path, oldLineNumber, newLineNumber) + " | " + "**" + learningPathFile + "**"
+}
+
 function AssembleCodeFileLink(fileName, path, oldLineNumber, newLineNumber)
 {
   var codeFileLink = "[" + fileName + "]" + "(" + path + ")"
-  if (oldLineNumber)
+  if (oldLineNumber !== undefined)
   {
     codeFileLink += " " + linePrefix + oldLineNumber;
-    if (newLineNumber) {
+    if (newLineNumber !== undefined) {
       codeFileLink += " --> " + linePrefix + newLineNumber;
     }
   }
 
   return codeFileLink;
-}
-
-function AssembleOutput(fileName, path, oldLineNumber, newLineNumber, learningPathFile)
-{
-  return AssembleCodeFileLink(fileName, path, oldLineNumber, newLineNumber) + " | " + "**" + learningPathFile + "**"
 }
 
 // This is currently primitive - can make it better as-needed.
