@@ -59,7 +59,7 @@ function AppendLineNumber(text, oldLineNumber, newLineNumber)
 {
   if (oldLineNumber === undefined) { return text }
 
-  return text + " " + linePrefix + lineNumber + (newLineNumber === undefined ? "" : " --> " + linePrefix + newLineNumber);
+  return text + " " + linePrefix + oldLineNumber + (newLineNumber === undefined ? "" : " --> " + linePrefix + newLineNumber);
 }
 
 // This is currently primitive - can make it better as-needed.
