@@ -104,6 +104,7 @@ function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedP
 
       UpdateModifiedFiles(fileName, simplifiedLink, learningPathFile);
 
+      console.log("Read Merge File: " + mergePathPrefix + trimmedFilePath);
       var mergeContent = fs.readFileSync(mergePathPrefix + trimmedFilePath, "utf8")
       if (!mergeContent)
       {
@@ -112,6 +113,7 @@ function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedP
       }
       else if (!hasLineNumber) { continue }
 
+      console.log("Read Head File: " + headPathPrefix + trimmedFilePath);
       var headContent = fs.readFileSync(headPathPrefix + trimmedFilePath, "utf8")
       if (!headContent) { continue } // not sure if this works
 
