@@ -31,15 +31,15 @@ function UpdateModifiedFiles(fileName, path, learningPathFile)
   SetOutput('modifiedFiles', modifiedFiles)
 }
 
-function UpdateManuallyReview(fileName, path, learningPathFile, lineNumber = undefined)
+function UpdateManuallyReview(fileName, path, learningPathFileAndLine, lineNumber = undefined)
 {
-  manuallyReview.add(AssembleOutput(fileName, path, lineNumber, undefined, learningPathFile));
+  manuallyReview.add(AssembleOutput(fileName, path, lineNumber, undefined, learningPathFileAndLine));
   SetOutput('manuallyReview', manuallyReview)
 }
 
-function UpdateSuggestions(fileName, path, learningPathFile, oldLineNumber, newLineNumber)
+function UpdateSuggestions(fileName, path, learningPathFileAndLine, oldLineNumber, newLineNumber)
 {
-  suggestions.add(AssembleOutput(fileName, path, oldLineNumber, newLineNumber, learningPathFile));
+  suggestions.add(AssembleOutput(fileName, path, oldLineNumber, newLineNumber, learningPathFileAndLine));
   SetOutput('suggestions', suggestions)
 }
 
@@ -48,23 +48,18 @@ function SetOutput(outputName, outputSet)
   core.setOutput(outputName, Array.from(outputSet).join(","));
 }
 
-function AssembleOutput(fileName, path, oldLineNumber, newLineNumber, learningPathFile)
+function AssembleOutput(fileName, path, oldLineNumber, newLineNumber, learningPathFile, learningPathLineNumber)
 {
   var codeFileLink = "[" + fileName + "]" + "(" + path + ")"
-  if (oldLineNumber !== undefined)
-  {
-    codeFileLink = AppendLineNumber(codeFileLink, oldLineNumber);
-    if (newLineNumber !== undefined) {
-      codeFileLink += " --> " + linePrefix + newLineNumber;
-    }
-  }
-
-  return codeFileLink + " | " + "**" + learningPathFile + "**"
+  codeFileLink = AppendLineNumber(codeFileLink, oldLineNumber, newLineNumber)
+  return codeFileLink + " | " + "**" + AppendLineNumber(learningPathFile, learningPathLineNumber, undefined) + "**"
 }
 
-function AppendLineNumber(text, lineNumber)
+function AppendLineNumber(text, oldLineNumber, newLineNumber)
 {
-  return text + " " + linePrefix + lineNumber;
+  if (oldLineNumber === undefined) { return text }
+
+  return text + " " + linePrefix + lineNumber + (newLineNumber === undefined ? "" : " --> " + linePrefix + newLineNumber);
 }
 
 // This is currently primitive - can make it better as-needed.
@@ -79,7 +74,7 @@ function CheckForEndOfLink(str, startIndex)
   return illegalCharIndex;*/
 }
 
-function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedFilePaths, learningPathFile)
+function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedPRFiles, learningPathFile)
 {
   var linkIndices = [];
   for(var pos = headLearningPathFileContentStr.indexOf(repoURLToSearch); pos !== -1; pos = headLearningPathFileContentStr.indexOf(repoURLToSearch, pos + 1)) {
@@ -91,8 +86,8 @@ function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedF
     const endIndex = startIndex + CheckForEndOfLink(headLearningPathFileContentStr, startIndex)
     const link = headLearningPathFileContentStr.substring(startIndex, endIndex);
 
-    const learningPathFileLineNumber = headLearningPathFileContentStr.substring(0, startIndex).split("\n").length;
-    const learningPathFileAndLineNumber = AppendLineNumber(learningPathFile, learningPathFileLineNumber)
+    const learningPathLineNumber = headLearningPathFileContentStr.substring(0, startIndex).split("\n").length;
+    const learningPathFileAndLineNumber = AppendLineNumber(learningPathFile, learningPathLineNumber)
 
     const indexOfLineNumber = link.indexOf(linePrefix);
     const hasLineNumber = indexOfLineNumber !== -1;
@@ -102,56 +97,47 @@ function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedF
 
     const trimmedFilePath = link.substring(pathStartIndex, pathEndIndex);
 
-    const pathIndex = modifiedFilePaths.indexOf(trimmedFilePath)
-
-    const fileName = trimmedFilePath.substring(trimmedFilePath.lastIndexOf('/') + 1);
-
-    if (pathIndex !== -1)
+    if (modifiedPRFiles.indexOf(trimmedFilePath))
     {
-      const strippedLink = hasLineNumber ? link.substring(0, indexOfLineNumber) : link;
+      const fileName = trimmedFilePath.substring(trimmedFilePath.lastIndexOf('/') + 1);
+      const simplifiedLink = hasLineNumber ? link.substring(0, indexOfLineNumber) : link;
 
-      UpdateModifiedFiles(fileName, strippedLink, learningPathFile);
+      UpdateModifiedFiles(fileName, simplifiedLink, learningPathFile);
 
-      fs.readFile(mergePathPrefix + trimmedFilePath, (err, mergeContent) => {
-        if (err)
+      var mergeContent = fs.readFileSync(mergePathPrefix + trimmedFilePath, "utf8")
+      if (!mergeContent)
+      {
+        UpdateManuallyReview(fileName, link, learningPathFileAndLineNumber);
+        continue // not sure if this works
+      }
+      else if (!hasLineNumber) { continue }
+
+      var headContent = fs.readFileSync(headPathPrefix + trimmedFilePath, "utf8")
+      if (!headContent) { continue } // not sure if this works
+
+      const lineNumber = Number(link.substring(indexOfLineNumber + linePrefix.length, link.length));
+
+      const mergeContentLines = mergeContent.toString().split("\n");
+      const headContentLines = headContent.toString().split("\n");
+
+      if (headContentLines.length < lineNumber || mergeContentLines.length < lineNumber)
+      {
+        UpdateManuallyReview(fileName, link, learningPathFileAndLineNumber, lineNumber);
+      }
+      else if (headContentLines[lineNumber - 1].trim() !== mergeContentLines[lineNumber - 1].trim())
+      {
+        const lastIndex = mergeContentLines.lastIndexOf(headContentLines[lineNumber - 1]) + 1;
+        const firstIndex = mergeContentLines.indexOf(headContentLines[lineNumber - 1]) + 1;
+
+        if (lastIndex != firstIndex) // Indeterminate; multiple matches
         {
-          UpdateManuallyReview(fileName, link, learningPathFileAndLineNumber, learningPathFileLineNumber);
+          UpdateManuallyReview(fileName, link, learningPathFileAndLineNumber, lineNumber);
         }
-        else if (hasLineNumber)
+        else // not a perfect heuristic, but should be good enough for most cases
         {
-          fs.readFile(headPathPrefix + trimmedFilePath, (err, headContent) => {
-          
-            // If the file previously didn't exist, then we don't need to check line numbers
-            if (err || headContent === null || headContent.length === 0) {}
-            else
-            {
-              const lineNumber = Number(link.substring(indexOfLineNumber + linePrefix.length, link.length));
-
-              const mergeContentLines = mergeContent.toString().split("\n");
-              const headContentLines = headContent.toString().split("\n");
-
-              if (headContentLines.length < lineNumber || mergeContentLines.length < lineNumber)
-              {
-                UpdateManuallyReview(fileName, link, learningPathFileAndLineNumber, learningPathFileLineNumber);
-              }
-              else if (headContentLines[lineNumber - 1].trim() !== mergeContentLines[lineNumber - 1].trim())
-              {
-                const lastIndex = mergeContentLines.lastIndexOf(headContentLines[lineNumber - 1]) + 1;
-                const firstIndex = mergeContentLines.indexOf(headContentLines[lineNumber - 1]) + 1;
-
-                if (lastIndex != firstIndex) // Multiple matches
-                {
-                  UpdateManuallyReview(fileName, link, learningPathFileAndLineNumber, lineNumber);
-                }
-                else // not a perfect heuristic, but should be good enough for most cases
-                {
-                  UpdateSuggestions(fileName, link, learningPathFileAndLineNumber, lineNumber, firstIndex)
-                }
-              }
-            }
-          });
+          UpdateSuggestions(fileName, link, learningPathFileAndLineNumber, lineNumber, firstIndex)
         }
-      });
+      }
     }
   }
 }
@@ -175,8 +161,7 @@ const main = async () => {
         fs.readFile(headLearningFilePath, (err, headLearningPathFileContent) => {
           if (headLearningPathFileContent !== null && headLearningPathFileContent.length > 0)
           {
-            const modifiedFilePaths = paths.split(' ');
-            CompareFiles(headLearningPathFileContent.toString(), repoURLToSearch, modifiedFilePaths, learningPathFile)
+            CompareFiles(headLearningPathFileContent.toString(), repoURLToSearch, paths.split(' '), learningPathFile)
           }
         });
       });
