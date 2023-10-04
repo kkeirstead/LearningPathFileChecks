@@ -91,6 +91,9 @@ function CompareFiles(newLearningPathFileContentStr, existingLearningPathFileCon
     const endIndex = startIndex + CheckForEndOfLink(existingLearningPathFileContentStr, startIndex)
     const link = existingLearningPathFileContentStr.substring(startIndex, endIndex);
 
+    const learningPathFileLineNumber = existingLearningPathFileContentStr.substring(0, startIndex).split("\n").length;
+    const learningPathFileAndLineNumber = learningPathFile + " " + linePrefix + learningPathFileLineNumber;
+
     const indexOfLineNumber = link.indexOf(linePrefix);
     const hasLineNumber = indexOfLineNumber !== -1;
 
@@ -105,19 +108,14 @@ function CompareFiles(newLearningPathFileContentStr, existingLearningPathFileCon
 
     if (pathIndex !== -1)
     {
-      var strippedLink = link
-
-      if (hasLineNumber)
-      {
-        strippedLink = strippedLink.substring(0, indexOfLineNumber);
-      }
+      const strippedLink = hasLineNumber ? link.substring(0, indexOfLineNumber) : link;
 
       UpdateModifiedFiles(fileName, strippedLink, learningPathFile);
 
       fs.readFile(mergePathPrefix + trimmedFilePath, (err, newContent) => {
         if (err || newLearningPathFileContentStr === null || newLearningPathFileContentStr.length === 0)
         {
-          UpdateManuallyReview(fileName, link, learningPathFile);
+          UpdateManuallyReview(fileName, link, learningPathFileAndLineNumber, learningPathFileLineNumber);
         }
         else if (hasLineNumber)
         {
@@ -134,7 +132,7 @@ function CompareFiles(newLearningPathFileContentStr, existingLearningPathFileCon
 
               if (existingContentLines.length < lineNumber || newContentLines.length < lineNumber)
               {
-                UpdateManuallyReview(fileName, link, learningPathFile);
+                UpdateManuallyReview(fileName, link, learningPathFileAndLineNumber, learningPathFileLineNumber);
               }
               else if (existingContentLines[lineNumber - 1].trim() !== newContentLines[lineNumber - 1].trim())
               {
@@ -147,11 +145,11 @@ function CompareFiles(newLearningPathFileContentStr, existingLearningPathFileCon
 
                 if (updatedLineNumber === 0)
                 {
-                  UpdateManuallyReview(fileName, link, learningPathFile, lineNumber);
+                  UpdateManuallyReview(fileName, link, learningPathFileAndLineNumber, lineNumber);
                 }
                 else
                 {
-                  UpdateSuggestions(fileName, link, learningPathFile, lineNumber, updatedLineNumber)
+                  UpdateSuggestions(fileName, link, learningPathFileAndLineNumber, lineNumber, updatedLineNumber)
                 }
               }
             }
@@ -183,6 +181,9 @@ const main = async () => {
 
         const currLearningFilePath = newLearningPathsDirectory + "/" + learningPathFile
         const existingLearningFilePath = existingLearningPathsDirectory + "/" + learningPathFile
+
+        console.log("LearningPathFile: " + learningPathFile);
+        console.log("LearningPathFile URL: " + repoURLToSearch + learningPathFile)
 
         fs.readFile(currLearningFilePath, (err, newLearningPathFileContent) => {
           if (err) throw err;
