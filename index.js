@@ -145,7 +145,7 @@ function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedF
                 }
                 else // not a perfect heuristic, but should be good enough for most cases
                 {
-                  UpdateSuggestions(fileName, link, learningPathFileAndLineNumber, lineNumber, updatedLineNumber)
+                  UpdateSuggestions(fileName, link, learningPathFileAndLineNumber, lineNumber, firstIndex)
                 }
               }
             }
