@@ -7,6 +7,7 @@ const fs = require('fs');
 const mergePathPrefix = "merge/";
 const headPathPrefix = "head/";
 const linePrefix = "#L";
+const sourceDirectoryName = core.getInput('sourceDirectoryName', { required: true });
 
 modifiedFilesDict = {};
 modifiedFilesUrlToFileName = {};
@@ -89,7 +90,9 @@ function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedP
     const indexOfLinePrefix = link.indexOf(linePrefix);
     const hasLineNumber = indexOfLinePrefix !== -1;
 
-    const pathStartIndex = link.indexOf("src"); // should just trim the prefix, since this might not always be the case? -> paramaterize this -> should this be more flexible, i.e. to deal with eng folder?
+    const pathStartIndex = link.indexOf(sourceDirectoryName);
+    if (pathStartIndex === -1) { continue } // test this works by including an eng file?
+
     const pathEndIndex = hasLineNumber ? indexOfLinePrefix : endIndex;
 
     const trimmedFilePath = link.substring(pathStartIndex, pathEndIndex);
