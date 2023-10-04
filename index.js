@@ -72,19 +72,17 @@ function CheckForEndOfLink(str, startIndex)
   return illegalCharIndex;*/
 }
 
-function CompareFiles(newLearningPathFileContentStr, repoURLToSearch, modifiedFilePaths, currLearningFilePath, learningPathFile)
+function CompareFiles(newLearningPathFileContentStr, existingLearningPathFileContentStr, repoURLToSearch, modifiedFilePaths, learningPathFile)
 {
-  //const linkIndices2 = extractURLsFromString(newLearningPathFileContentStr, repoURLToSearch);
-
   var linkIndices = [];
-  for(var pos = newLearningPathFileContentStr.indexOf(repoURLToSearch); pos !== -1; pos = newLearningPathFileContentStr.indexOf(repoURLToSearch, pos + 1)) {
+  for(var pos = existingLearningPathFileContentStr.indexOf(repoURLToSearch); pos !== -1; pos = existingLearningPathFileContentStr.indexOf(repoURLToSearch, pos + 1)) {
       linkIndices.push(pos);
   }
 
   for(let startIndex of linkIndices)
   {
-    const endIndex = startIndex + CheckForEndOfLink(newLearningPathFileContentStr, startIndex)
-    const link = newLearningPathFileContentStr.substring(startIndex, endIndex);
+    const endIndex = startIndex + CheckForEndOfLink(existingLearningPathFileContentStr, startIndex)
+    const link = existingLearningPathFileContentStr.substring(startIndex, endIndex);
 
     const indexOfLineNumber = link.indexOf(linePrefix);
     const hasLineNumber = indexOfLineNumber !== -1;
@@ -191,7 +189,7 @@ const main = async () => {
 
               if (true /*existingLearningPathFileContentStr === newLearningPathFileContentStr*/) // temp
               {
-                CompareFiles(newLearningPathFileContentStr, repoURLToSearch, modifiedFilePaths, currLearningFilePath, learningPathFile)
+                CompareFiles(newLearningPathFileContentStr, existingLearningPathFileContentStr, repoURLToSearch, modifiedFilePaths, learningPathFile)
               }
               else
               {
@@ -200,7 +198,8 @@ const main = async () => {
             }
             else
             {
-              CompareFiles(newLearningPathFileContentStr, repoURLToSearch, modifiedFilePaths, currLearningFilePath, learningPathFile)
+              // do nothing?
+              //CompareFiles(newLearningPathFileContentStr, existingLearningPathFileContentStr, repoURLToSearch, modifiedFilePaths, learningPathFile)
             }
           });
         });
