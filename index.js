@@ -1,6 +1,6 @@
 // TODO:
 // Don't just look for ) as end of link character
-// Don't print this out every single time a change is made (or add a silencing mechanism) -> look for identical comment that already exists?
+// Don't print this out every single time a change is made (or add a silencing mechanism) -> look for identical comment that already exists? -> for potential reversions, maybe only scan the most recent LPSC check?
 // When a broken line has multiple possible matches, handle that scenario instead of just picking the first one -> Done
 // Handle cases where the learning path was already manually updated...could probably start with checking if the file was manually changed, don't scan it and assume the user has already updated it accordingly -> Done
 
