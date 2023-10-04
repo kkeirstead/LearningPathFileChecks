@@ -74,7 +74,7 @@ function CheckForEndOfLink(str, startIndex)
   return illegalCharIndex;*/
 }
 
-function CompareFiles(mergeLearningPathFileContentStr, headLearningPathFileContentStr, repoURLToSearch, modifiedFilePaths, learningPathFile)
+function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedFilePaths, learningPathFile)
 {
   var linkIndices = [];
   for(var pos = headLearningPathFileContentStr.indexOf(repoURLToSearch); pos !== -1; pos = headLearningPathFileContentStr.indexOf(repoURLToSearch, pos + 1)) {
@@ -108,7 +108,7 @@ function CompareFiles(mergeLearningPathFileContentStr, headLearningPathFileConte
       UpdateModifiedFiles(fileName, strippedLink, learningPathFile);
 
       fs.readFile(mergePathPrefix + trimmedFilePath, (err, mergeContent) => {
-        if (err || mergeLearningPathFileContentStr === null || mergeLearningPathFileContentStr.length === 0)
+        if (err)
         {
           UpdateManuallyReview(fileName, link, learningPathFileAndLineNumber, learningPathFileLineNumber);
         }
@@ -175,7 +175,7 @@ const main = async () => {
           if (headLearningPathFileContent !== null && headLearningPathFileContent.length > 0)
           {
             const modifiedFilePaths = paths.split(' ');
-            CompareFiles(mergeLearningPathFileContentStr, headLearningPathFileContent.toString(), repoURLToSearch, modifiedFilePaths, learningPathFile)
+            CompareFiles(headLearningPathFileContent.toString(), repoURLToSearch, modifiedFilePaths, learningPathFile)
           }
         });
       });
