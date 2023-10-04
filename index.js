@@ -110,17 +110,25 @@ function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedP
 
       const learningPathLineNumber = headLearningPathFileContentStr.substring(0, startIndex).split("\n").length;
 
-      var mergeContent = fs.readFileSync(mergePathPrefix + trimmedFilePath, "utf8")
-      console.log("Merge Content: " + mergeContent)
-      if (!mergeContent)
-      {
+      var mergeContent = ""
+
+      try {
+        mergeContent = fs.readFileSync(mergePathPrefix + trimmedFilePath, "utf8")
+      }
+      catch (error) {
         UpdateManuallyReview(fileName, link, learningPathFile, learningPathLineNumber);
         continue // not sure if this works
       }
-      else if (!hasLineNumber) { continue }
 
-      var headContent = fs.readFileSync(headPathPrefix + trimmedFilePath, "utf8")
-      if (!headContent) { continue } // not sure if this works
+      if (!hasLineNumber) { continue }
+
+      var headContent = ""
+      try {
+        headContent = fs.readFileSync(headPathPrefix + trimmedFilePath, "utf8")
+      }
+      catch (error) {
+        continue // not sure if this works
+      }
 
       const lineNumber = Number(link.substring(indexOfLinePrefix + linePrefix.length, link.length));
 
@@ -165,10 +173,17 @@ const main = async () => {
     fs.readdir(headLearningPathsDirectory, (err, files) => {
       files.forEach(learningPathFile => {
 
-        const headLearningPathFileContent = fs.readFileSync(headLearningPathsDirectory + "/" + learningPathFile, "utf8")
-        if (headLearningPathFileContent)
-        {
-          CompareFiles(headLearningPathFileContent, repoURLToSearch, paths.split(' '), learningPathFile)
+        console.log("Learning Path File: " + learningPathFile)
+
+        try {
+          const headLearningPathFileContent = fs.readFileSync(headLearningPathsDirectory + "/" + learningPathFile, "utf8")
+          console.log("Head Learning Path File: " + headLearningPathFileContent)
+          if (headLearningPathFileContent)
+          {
+            CompareFiles(headLearningPathFileContent, repoURLToSearch, paths.split(' '), learningPathFile)
+          }
+        } catch (error) {
+          console.log("Could not find file: " + learningPathFile)
         }
       });
     });
