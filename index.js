@@ -87,6 +87,7 @@ function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedP
     const link = headLearningPathFileContentStr.substring(startIndex, endIndex);
 
     const indexOfLinePrefix = link.indexOf(linePrefix);
+    const hasLineNumber = indexOfLinePrefix !== -1;
 
     const pathStartIndex = link.indexOf("src"); // should just trim the prefix, since this might not always be the case? -> paramaterize this -> should this be more flexible, i.e. to deal with eng folder?
     const pathEndIndex = hasLineNumber ? indexOfLinePrefix : endIndex;
@@ -95,8 +96,6 @@ function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedP
 
     if (modifiedPRFiles.includes(trimmedFilePath))
     {
-      const hasLineNumber = indexOfLinePrefix !== -1;
-
       const fileName = trimmedFilePath.substring(trimmedFilePath.lastIndexOf('/') + 1);
       const simplifiedLink = hasLineNumber ? link.substring(0, indexOfLinePrefix) : link;
 
