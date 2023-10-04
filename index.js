@@ -107,6 +107,7 @@ function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedP
       const learningPathLineNumber = headLearningPathFileContentStr.substring(0, startIndex).split("\n").length;
 
       var mergeContent = fs.readFileSync(mergePathPrefix + trimmedFilePath, "utf8")
+      console.log("Merge Content: " + mergeContent)
       if (!mergeContent)
       {
         UpdateManuallyReview(fileName, link, learningPathFile, learningPathLineNumber);
@@ -122,11 +123,11 @@ function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedP
       const mergeContentLines = mergeContent.toString().split("\n");
       const headContentLines = headContent.toString().split("\n");
 
-      if (headContentLines.length < lineNumber || mergeContentLines.length < lineNumber)
+      if (headContentLines.length < lineNumber) // This shouldn't happen, unless the learning path is already out of date.
       {
         UpdateManuallyReview(fileName, link, learningPathFile, learningPathLineNumber, lineNumber);
       }
-      else if (headContentLines[lineNumber - 1].trim() !== mergeContentLines[lineNumber - 1].trim())
+      else if (mergeContentLines.length < lineNumber || headContentLines[lineNumber - 1].trim() !== mergeContentLines[lineNumber - 1].trim())
       {
         const lastIndex = mergeContentLines.lastIndexOf(headContentLines[lineNumber - 1]) + 1;
         const firstIndex = mergeContentLines.indexOf(headContentLines[lineNumber - 1]) + 1;
@@ -153,6 +154,8 @@ const main = async () => {
     const paths = core.getInput('paths', {required: false});
     
     if (paths === null && paths.trim() === "") { return }
+
+    console.log("Paths: " + paths)
 
     // Scan each file in the learningPaths directory
     fs.readdir(headLearningPathsDirectory, (err, files) => {
