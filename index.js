@@ -68,7 +68,7 @@ function CheckForEndOfLink(str, startIndex)
 {
   //return str.substr(startIndex).indexOf(")"); // temporary
   
-  const illegalRegex = /^[^()\[\]{} ,]+$/ // not accounting for periods at end
+  const illegalRegex = "/^[^()\[\]{} ,]+$/" // not accounting for periods at end
 
   var linkSubstr = str.substr(startIndex)
   const illegalCharIndex = linkSubstr.search(illegalRegex);
@@ -98,10 +98,6 @@ function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedP
     const pathEndIndex = hasLineNumber ? indexOfLinePrefix : endIndex;
 
     const trimmedFilePath = link.substring(pathStartIndex, pathEndIndex);
-
-    console.log("--------------------")
-    console.log("Link: " + link)
-    console.log("TrimmedFilePath: " + trimmedFilePath)
 
     if (modifiedPRFiles.includes(trimmedFilePath))
     {
@@ -169,17 +165,12 @@ const main = async () => {
     
     if (paths === null && paths.trim() === "") { return }
 
-    console.log("Paths: " + paths)
-
     // Scan each file in the learningPaths directory
     fs.readdir(headLearningPathsDirectory, (err, files) => {
       files.forEach(learningPathFile => {
 
-        console.log("Learning Path File: " + learningPathFile)
-
         try {
           const headLearningPathFileContent = fs.readFileSync(headLearningPathsDirectory + "/" + learningPathFile, "utf8")
-          console.log("Head Learning Path File: " + headLearningPathFileContent)
           if (headLearningPathFileContent)
           {
             CompareFiles(headLearningPathFileContent, repoURLToSearch, paths.split(' '), learningPathFile)
