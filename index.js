@@ -66,13 +66,15 @@ function AppendLineNumber(text, oldLineNumber, newLineNumber)
 // This is currently primitive - can make it better as-needed.
 function CheckForEndOfLink(str, startIndex)
 {
-  return str.substr(startIndex).indexOf(")"); // temporary
-  /*
+  //return str.substr(startIndex).indexOf(")"); // temporary
+  
   const illegalRegex = /^[^()\[\]{} ,]+$/ // not accounting for periods at end
 
-  const illegalCharIndex = str.substr(startIndex).search(illegalRegex);
+  var linkSubstr = str.substr(startIndex)
+  const illegalCharIndex = linkSubstr.search(illegalRegex);
+  console.log("Link Substr: " + linkSubstr + "Illegal Char Index: " + illegalCharIndex);
 
-  return illegalCharIndex;*/
+  return illegalCharIndex;
 }
 
 function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedPRFiles, learningPathFile)
