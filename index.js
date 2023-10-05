@@ -91,8 +91,12 @@ function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedP
 
     const trimmedFilePath = link.substring(pathStartIndex, pathEndIndex);
 
+    console.log("Trimmed File Path: " + trimmedFilePath);
+
     if (modifiedPRFiles.includes(trimmedFilePath))
     {
+      console.log("Made it!");
+      console.log("")
       const fileName = trimmedFilePath.substring(trimmedFilePath.lastIndexOf('/') + 1);
       const simplifiedLink = hasLineNumber ? link.substring(0, indexOfLinePrefix) : link;
 
