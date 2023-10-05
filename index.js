@@ -68,7 +68,7 @@ function CheckForEndOfLink(str, startIndex)
 {
   //return str.substr(startIndex).indexOf(")"); // temporary
   
-  const illegalRegex = "/^[^()\[\]{} ,]+$/" // not accounting for periods at end
+  const illegalRegex = "[(), ]" // not accounting for periods at end -> add some more characters if this works
 
   var linkSubstr = str.substr(startIndex)
   const illegalCharIndex = linkSubstr.search(illegalRegex);
