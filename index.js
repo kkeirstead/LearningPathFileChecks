@@ -173,6 +173,7 @@ const main = async () => {
             CompareFiles(headLearningPathFileContent, repoURLToSearch, paths.split(' '), learningPathFile)
           }
         } catch (error) {
+          console.log("Error: " + error)
           console.log("Could not find file: " + learningPathFile)
         }
       });
