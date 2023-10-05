@@ -63,17 +63,9 @@ function AppendLineNumber(text, oldLineNumber, newLineNumber)
   return text + " " + linePrefix + oldLineNumber + (newLineNumber === undefined ? "" : " --> " + linePrefix + newLineNumber);
 }
 
-// This is currently primitive - can make it better as-needed.
 function CheckForEndOfLink(str, startIndex)
 {
-  //return str.substr(startIndex).indexOf(")"); // temporary
-  
-  const illegalRegex = "[(), ]" // not accounting for periods at end -> add some more characters if this works
-
-  var linkSubstr = str.substr(startIndex)
-  const illegalCharIndex = linkSubstr.search(illegalRegex);
-  console.log("Link Substr: " + linkSubstr + "Illegal Char Index: " + illegalCharIndex);
-
+  const illegalCharIndex = str.substr(startIndex).search("[(), '`\"\]\[\}\{]|\. ");
   return illegalCharIndex;
 }
 
