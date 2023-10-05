@@ -65,7 +65,8 @@ function AppendLineNumber(text, oldLineNumber, newLineNumber)
 
 function CheckForEndOfLink(str, startIndex)
 {
-  const illegalCharIndex = str.substr(startIndex).search("[(), '`\"\]\[\}\{]|\. ");
+  const illegalCharIndex = str.substr(startIndex).search("[(), ");
+  //const illegalCharIndex = str.substr(startIndex).search("[(), '`\"\]\[\}\{]|\. ");
   return illegalCharIndex;
 }
 
@@ -85,7 +86,7 @@ function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedP
     const hasLineNumber = indexOfLinePrefix !== -1;
 
     const pathStartIndex = link.indexOf(sourceDirectoryName);
-    if (pathStartIndex === -1) { continue } // test this works by including an eng file?
+    if (pathStartIndex === -1) { continue }
 
     const pathEndIndex = hasLineNumber ? indexOfLinePrefix : endIndex;
 
