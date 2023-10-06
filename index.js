@@ -65,7 +65,7 @@ function AppendLineNumber(text, oldLineNumber, newLineNumber)
 
 function CheckForEndOfLink(str, startIndex)
 {
-  const illegalCharIndex = str.substr(startIndex).search("[(), '\`\"\]\[]|\. "); // Need to keep iterating on this...doesn't like something in here.
+  const illegalCharIndex = str.substr(startIndex).search("[(), '\`\"\}\{]|\. "); // Need to keep iterating on this...doesn't like something in here.
   //const illegalCharIndex = str.substr(startIndex).search("[(), '`\"\]\[\}\{]|\. ");
   return illegalCharIndex;
 }
