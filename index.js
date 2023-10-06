@@ -38,7 +38,7 @@ function UpdateModifiedFiles(fileName, path, learningPathFile)
 // be uniquely identified.
 function UpdateManuallyReview(fileName, path, learningPathFile, learningPathLineNumber, lineNumber = undefined)
 {
-  manuallyReview.add(AssembleOutput(fileName, path, lineNumber, undefined, learningPathFile, learningPathLineNumber));
+  manuallyReview.add(AssembleOutput(fileName, path, lineNumber, undefined, learningPathFile, learningPathLineNumber))
   SetOutput('manuallyReview', manuallyReview)
 }
 
@@ -47,13 +47,13 @@ function UpdateManuallyReview(fileName, path, learningPathFile, learningPathLine
 // this is the correct line to reference.
 function UpdateSuggestions(fileName, path, learningPathFile, learningPathLineNumber, oldLineNumber, newLineNumber)
 {
-  suggestions.add(AssembleOutput(fileName, path, oldLineNumber, newLineNumber, learningPathFile, learningPathLineNumber));
+  suggestions.add(AssembleOutput(fileName, path, oldLineNumber, newLineNumber, learningPathFile, learningPathLineNumber))
   SetOutput('suggestions', suggestions)
 }
 
 function SetOutput(outputName, outputSet)
 {
-  core.setOutput(outputName, Array.from(outputSet).join(","));
+  core.setOutput(outputName, Array.from(outputSet).join(","))
 }
 
 function AssembleOutput(fileName, path, oldLineNumber, newLineNumber, learningPathFile, learningPathLineNumber)
@@ -67,7 +67,7 @@ function AppendLineNumber(text, oldLineNumber, newLineNumber)
 {
   if (oldLineNumber === undefined) { return text }
 
-  return text + " " + linePrefix + oldLineNumber + (newLineNumber === undefined ? "" : " --> " + linePrefix + newLineNumber);
+  return text + " " + linePrefix + oldLineNumber + (newLineNumber === undefined ? "" : " --> " + linePrefix + newLineNumber)
 }
 
 function CheckForEndOfLink(str, startIndex)
@@ -94,8 +94,8 @@ function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedP
     if (pathStartIndex === -1) { continue }
 
     const linePrefixIndex = link.indexOf(linePrefix);
-    const hasLineNumber = linePrefixIndex !== -1;
-    const pathEndIndex = hasLineNumber ? linePrefixIndex : endOfLink;
+    const linkHasLineNumber = linePrefixIndex !== -1;
+    const pathEndIndex = linkHasLineNumber ? linePrefixIndex : endOfLink;
 
     // Check if the file being referenced by the link is one of the modified files in the PR
     const filePath = link.substring(pathStartIndex, pathEndIndex);
@@ -105,9 +105,10 @@ function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedP
 
       UpdateModifiedFiles(
         fileName,
-        hasLineNumber ? link.substring(0, linePrefixIndex) : link,
+        linkHasLineNumber ? link.substring(0, linePrefixIndex) : link,
         learningPathFile);
 
+      // This is the line number in the learning path file that contains the link - not the #L line number in the link itself
       const learningPathLineNumber = headLearningPathFileContentStr.substring(0, startOfLink).split("\n").length;
 
       // Get the contents of the referenced file from head (old) and merge (new) to compare them
@@ -125,7 +126,7 @@ function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedP
         continue
       }
 
-      if (!hasLineNumber) { continue }
+      if (!linkHasLineNumber) { continue }
 
       var headContent = ""
       try {
@@ -133,29 +134,29 @@ function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedP
       }
       catch (error) { continue }
 
-      const lineNumberInLink = Number(link.substring(linePrefixIndex + linePrefix.length, link.length));
+      const linkLineNumber = Number(link.substring(linePrefixIndex + linePrefix.length, link.length));
 
       const mergeContentLines = mergeContent.toString().split("\n");
       const headContentLines = headContent.toString().split("\n");
 
-      if (headContentLines.length < lineNumberInLink) // This shouldn't happen, unless the learning path is already out of date.
+      if (headContentLines.length < linkLineNumber) // This shouldn't happen, unless the learning path is already out of date.
       {
         UpdateManuallyReview(
           fileName,
           link,
           learningPathFile,
           learningPathLineNumber,
-          lineNumberInLink);
+          linkLineNumber);
       }
       // If the referenced line in the merge branch is identical to the line in the head branch, then the line number is still considered correct.
       // Note that this can miss cases with ambiguous code that happens to align - this is a limitation of the heuristic. Learning Path authors
       // are encouraged to choose lines of code that are unique (e.g. not a newline, open brace, etc.)
-      else if (mergeContentLines.length < lineNumberInLink || headContentLines[lineNumberInLink - 1].trim() !== mergeContentLines[lineNumberInLink - 1].trim())
+      else if (mergeContentLines.length < linkLineNumber || headContentLines[linkLineNumber - 1].trim() !== mergeContentLines[linkLineNumber - 1].trim())
       {
         // Check for multiple instances of the referenced line in the file - if there are multiple, then we don't know
         // which one to reference, so we'll ask the PR author to manually review the file.
-        const lastIndex = mergeContentLines.lastIndexOf(headContentLines[lineNumberInLink - 1]) + 1;
-        const firstIndex = mergeContentLines.indexOf(headContentLines[lineNumberInLink - 1]) + 1;
+        const lastIndex = mergeContentLines.lastIndexOf(headContentLines[linkLineNumber - 1]) + 1;
+        const firstIndex = mergeContentLines.indexOf(headContentLines[linkLineNumber - 1]) + 1;
 
         if (lastIndex != firstIndex) // Indeterminate; multiple matches found in the file
         {
@@ -164,7 +165,7 @@ function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedP
             link,
             learningPathFile,
             learningPathLineNumber,
-            lineNumberInLink);
+            linkLineNumber);
         }
         else
         {
@@ -173,7 +174,7 @@ function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedP
             link,
             learningPathFile,
             learningPathLineNumber,
-            lineNumberInLink,
+            linkLineNumber,
             firstIndex)
         }
       }
@@ -189,7 +190,7 @@ const main = async () => {
     const headLearningPathsDirectory = headPathPrefix + learningPathDirectory;
     const changedFilePaths = core.getInput('changedFilePaths', {required: false});
     
-    if (changedFilePaths === null && changedFilePaths.trim() === "") { return }
+    if (changedFilePaths === null || changedFilePaths.trim() === "") { return }
 
     // Scan each file in the learningPaths directory
     fs.readdir(headLearningPathsDirectory, (err, files) => {
