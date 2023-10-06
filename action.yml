@@ -7,7 +7,7 @@ inputs:
   learningPathsDirectory:
     description: 'The directory where the learning paths reside (e.g. documentation/learningPath)'
     required: true
-  paths:
+  changedFilePaths:
     description: 'Paths to the changed files'
     required: false
   sourceDirectoryName:
