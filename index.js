@@ -150,7 +150,7 @@ function CompareFiles(prevLearningPathFileContentStr, repoURLToSearch, modifiedP
       // If the referenced line in the head branch is identical to the line in the head branch, then the line number is still considered correct.
       // Note that this can miss cases with ambiguous code that happens to align - this is a limitation of the heuristic. Learning Path authors
       // are encouraged to choose lines of code that are unique (e.g. not a newline, open brace, etc.)
-      else if (headContentLines.length < linkLineNumber || prevContent[linkLineNumber - 1].trim() !== headContentLines[linkLineNumber - 1].trim())
+      else if (headContentLines.length < linkLineNumber || prevContentLines[linkLineNumber - 1].trim() !== headContentLines[linkLineNumber - 1].trim())
       {
         // Check for multiple instances of the referenced line in the file - if there are multiple, then we don't know
         // which one to reference, so we'll ask the PR author to manually review the file.
@@ -186,7 +186,7 @@ const main = async () => {
   try {
     const learningPathDirectory = core.getInput('learningPathsDirectory', { required: true });
     const repoURLToSearch = core.getInput('repoURLToSearch', { required: true });
-    const prevLearningPathsDirectory = prevContent + learningPathDirectory;
+    const prevLearningPathsDirectory = prevPathPrefix + learningPathDirectory;
     const changedFilePaths = core.getInput('changedFilePaths', {required: false});
     
     if (changedFilePaths === null || changedFilePaths.trim() === "") { return }
