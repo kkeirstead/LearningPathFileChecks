@@ -140,8 +140,12 @@ function CompareFiles(prevLearningPathFileContentStr, repoURLToSearch, modifiedP
 
       const linkLineNumber = Number(link.substring(linePrefixIndex + linePrefix.length, link.length));
 
+      console.log("Learning Path Line Number: " + learningPathLineNumber + " Link Line Number: " + linkLineNumber)
+
       const headContentLines = headContent.toString().split("\n");
       const prevContentLines = prevContent.toString().split("\n");
+
+      console.log("Head Content Lines: " + headContentLines.length + " Prev Content Lines: " + prevContentLines.length)
 
       if (prevContent.length < linkLineNumber) // This shouldn't happen, unless the learning path is already out of date.
       {
@@ -166,6 +170,7 @@ function CompareFiles(prevLearningPathFileContentStr, repoURLToSearch, modifiedP
 
         if (lastIndex != firstIndex) // Indeterminate; multiple matches found in the file
         {
+          console.log("Last Index: " + lastIndex + " First Index: " + firstIndex);
           console.log("Manually Review 2")
 
           UpdateManuallyReview(
