@@ -103,6 +103,8 @@ function CompareFiles(prevLearningPathFileContentStr, repoURLToSearch, modifiedP
     {
       const fileName = filePath.substring(filePath.lastIndexOf('/') + 1);
 
+      console.log("File: " + fileName + " Path: " + filePath + " Link: " + link + " Has Line Number: " + linkHasLineNumber);
+
       UpdateModifiedFiles(
         fileName,
         linkHasLineNumber ? link.substring(0, linePrefixIndex) : link,
@@ -117,6 +119,9 @@ function CompareFiles(prevLearningPathFileContentStr, repoURLToSearch, modifiedP
         headContent = fs.readFileSync(headPathPrefix + filePath, "utf8")
       }
       catch (error) {
+
+        console.log("Error: " + error)
+
         UpdateManuallyReview(
           fileName,
           link,
@@ -140,6 +145,8 @@ function CompareFiles(prevLearningPathFileContentStr, repoURLToSearch, modifiedP
 
       if (prevContent.length < linkLineNumber) // This shouldn't happen, unless the learning path is already out of date.
       {
+        console.log("Manually Review 1")
+
         UpdateManuallyReview(
           fileName,
           link,
@@ -159,6 +166,8 @@ function CompareFiles(prevLearningPathFileContentStr, repoURLToSearch, modifiedP
 
         if (lastIndex != firstIndex) // Indeterminate; multiple matches found in the file
         {
+          console.log("Manually Review 2")
+
           UpdateManuallyReview(
             fileName,
             link,
@@ -168,6 +177,8 @@ function CompareFiles(prevLearningPathFileContentStr, repoURLToSearch, modifiedP
         }
         else
         {
+          console.log("Update suggestions")
+
           UpdateSuggestions(
             fileName,
             link,
