@@ -8,6 +8,8 @@ const prevPathPrefix = "prev/";
 const headPathPrefix = "head/";
 const linePrefix = "#L";
 const sourceDirectoryName = core.getInput('sourceDirectoryName', { required: true });
+const oldHash = core.getInput('oldHash', { required: true });
+const newHash = core.getInput('newHash', { required: true });
 
 modifiedFilesDict = {};
 modifiedFilesUrlToFileName = {};
@@ -27,7 +29,7 @@ function UpdateModifiedFiles(fileName, path, learningPathFile)
   for (currPath in modifiedFilesDict)
   {
     const fileName = modifiedFilesUrlToFileName[currPath];
-    modifiedFiles.add(AssembleOutput(fileName, currPath, undefined, undefined, Array.from(modifiedFilesDict[currPath]).join(" ")));
+    modifiedFiles.add(AssembleOutput(fileName, currPath, undefined, undefined, undefined, Array.from(modifiedFilesDict[currPath]).join(" ")));
   }
 
   SetOutput('modifiedFiles', modifiedFiles)
@@ -38,16 +40,16 @@ function UpdateModifiedFiles(fileName, path, learningPathFile)
 // be uniquely identified.
 function UpdateManuallyReview(fileName, path, learningPathFile, learningPathLineNumber, lineNumber = undefined)
 {
-  manuallyReview.add(AssembleOutput(fileName, path, lineNumber, undefined, learningPathFile, learningPathLineNumber))
+  manuallyReview.add(AssembleOutput(fileName, path, undefined, lineNumber, undefined, learningPathFile, learningPathLineNumber))
   SetOutput('manuallyReview', manuallyReview)
 }
 
 // Suggestions - A line reference has changed in this PR, and the PR Author should update the line accordingly.
 // There are edge cases where this may make an incorrect recommendation, so the PR author should verify that
 // this is the correct line to reference.
-function UpdateSuggestions(fileName, path, learningPathFile, learningPathLineNumber, oldLineNumber, newLineNumber)
+function UpdateSuggestions(fileName, oldPath, newPath, learningPathFile, learningPathLineNumber, oldLineNumber, newLineNumber)
 {
-  suggestions.add(AssembleOutput(fileName, path, oldLineNumber, newLineNumber, learningPathFile, learningPathLineNumber))
+  suggestions.add(AssembleOutput(fileName, oldPath, newPath, oldLineNumber, newLineNumber, learningPathFile, learningPathLineNumber))
   SetOutput('suggestions', suggestions)
 }
 
@@ -56,18 +58,26 @@ function SetOutput(outputName, outputSet)
   core.setOutput(outputName, Array.from(outputSet).join(","))
 }
 
-function AssembleOutput(fileName, path, oldLineNumber, newLineNumber, learningPathFile, learningPathLineNumber)
+function AssembleOutput(fileName, oldPath, newPath, oldLineNumber, newLineNumber, learningPathFile, learningPathLineNumber)
 {
-  var codeFileLink = "[" + fileName + "]" + "(" + path + ")"
-  codeFileLink = AppendLineNumber(codeFileLink, oldLineNumber, newLineNumber)
-  return codeFileLink + " | " + "**" + AppendLineNumber(learningPathFile, learningPathLineNumber, undefined) + "**"
+  var oldCodeFileLink = "[" + fileName + "]" + "(" + oldPath + ")"
+  oldCodeFileLink = AppendLineNumber(oldCodeFileLink, oldLineNumber)
+  var combinedCodeFileLink = oldCodeFileLink;
+
+  if (newPath && newLineNumber) {
+    var newCodeFileLink = "[" + fileName + "]" + "(" + newPath + ")"
+    newCodeFileLink = AppendLineNumber(newCodeFileLink, newLineNumber)
+    combinedCodeFileLink += " -> " + newCodeFileLink;
+  }
+
+  return combinedCodeFileLink + "    " + "**update this link in" + AppendLineNumber(learningPathFile, learningPathLineNumber, undefined) + "**"
 }
 
-function AppendLineNumber(text, oldLineNumber, newLineNumber)
+function AppendLineNumber(text, lineNumber)
 {
-  if (oldLineNumber === undefined) { return text }
+  if (lineNumber === undefined) { return text }
 
-  return text + " " + linePrefix + oldLineNumber + (newLineNumber === undefined ? "" : " --> " + linePrefix + newLineNumber)
+  return text + " " + linePrefix + lineNumber
 }
 
 function CheckForEndOfLink(str, startIndex)
@@ -90,6 +100,8 @@ function CompareFiles(prevLearningPathFileContentStr, repoURLToSearch, modifiedP
     const endOfLink = startOfLink + CheckForEndOfLink(prevLearningPathFileContentStr, startOfLink)
     const link = prevLearningPathFileContentStr.substring(startOfLink, endOfLink);
 
+    if (!link.contains(oldHash)) { continue } // This link doesn't contain the old hash, so it's not a link that needs to be updated
+
     const pathStartIndex = link.indexOf(sourceDirectoryName);
     if (pathStartIndex === -1) { continue }
 
@@ -102,8 +114,6 @@ function CompareFiles(prevLearningPathFileContentStr, repoURLToSearch, modifiedP
     if (modifiedPRFiles.includes(filePath))
     {
       const fileName = filePath.substring(filePath.lastIndexOf('/') + 1);
-
-      console.log("File: " + fileName + " Path: " + filePath + " Link: " + link + " Has Line Number: " + linkHasLineNumber);
 
       UpdateModifiedFiles(
         fileName,
@@ -119,8 +129,6 @@ function CompareFiles(prevLearningPathFileContentStr, repoURLToSearch, modifiedP
         headContent = fs.readFileSync(headPathPrefix + filePath, "utf8")
       }
       catch (error) {
-
-        console.log("Error: " + error)
 
         UpdateManuallyReview(
           fileName,
@@ -140,17 +148,11 @@ function CompareFiles(prevLearningPathFileContentStr, repoURLToSearch, modifiedP
 
       const linkLineNumber = Number(link.substring(linePrefixIndex + linePrefix.length, link.length));
 
-      console.log("Learning Path Line Number: " + learningPathLineNumber + " Link Line Number: " + linkLineNumber)
-
       const headContentLines = headContent.toString().split("\n");
       const prevContentLines = prevContent.toString().split("\n");
 
-      console.log("Head Content Lines: " + headContentLines.length + " Prev Content Lines: " + prevContentLines.length)
-
       if (prevContent.length < linkLineNumber) // This shouldn't happen, unless the learning path is already out of date.
       {
-        console.log("Manually Review 1")
-
         UpdateManuallyReview(
           fileName,
           link,
@@ -170,9 +172,6 @@ function CompareFiles(prevLearningPathFileContentStr, repoURLToSearch, modifiedP
 
         if (lastIndex != firstIndex) // Indeterminate; multiple matches found in the file
         {
-          console.log("Last Index: " + lastIndex + " First Index: " + firstIndex);
-          console.log("Manually Review 2")
-
           UpdateManuallyReview(
             fileName,
             link,
@@ -182,11 +181,12 @@ function CompareFiles(prevLearningPathFileContentStr, repoURLToSearch, modifiedP
         }
         else
         {
-          console.log("Update suggestions")
+          let updatedLink = link.replace(oldHash, newHash);
 
           UpdateSuggestions(
             fileName,
             link,
+            updatedLink,
             learningPathFile,
             learningPathLineNumber,
             linkLineNumber,

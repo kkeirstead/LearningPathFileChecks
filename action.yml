@@ -13,6 +13,12 @@ inputs:
   sourceDirectoryName:
     description: 'The name of the top-level directory (e.g. src) - only files inside this directory will be included in the search'
     required: true
+  oldHash:
+    description: 'The hash currently being used by the learning path'
+    required: true
+  newHash:
+    description: 'The hash to be inserted into the updated learning path'
+    required: true
 runs:
   using: 'node16'
   main: 'index.js'
