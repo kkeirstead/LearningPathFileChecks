@@ -14,6 +14,7 @@ const newHash = core.getInput('newHash', { required: true });
 modifiedFilesDict = {};
 modifiedFilesUrlToFileName = {};
 
+var outOfSync = new Set();
 var manuallyReview = new Set();
 var suggestions = new Set();
 
@@ -48,6 +49,13 @@ function UpdateManuallyReview(fileName, path, learningPathFile, learningPathLine
 {
   manuallyReview.add(AssembleOutput(fileName, path, undefined, lineNumber, undefined, learningPathFile, learningPathLineNumber))
   SetOutput('manuallyReview', manuallyReview)
+}
+
+function UpdateOutOfSync(link, learningPathFile)
+{
+  outOfSync.add(link + " | **" + learningPathFile + "**")
+
+  SetOutput('outOfSync', outOfSync)
 }
 
 // Suggestions - A line reference has changed in this PR, and the PR Author should update the line accordingly.
@@ -106,7 +114,12 @@ function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedP
     const endOfLink = startOfLink + CheckForEndOfLink(headLearningPathFileContentStr, startOfLink)
     const link = headLearningPathFileContentStr.substring(startOfLink, endOfLink);
 
-    if (!link.includes(oldHash)) { continue } // This link doesn't contain the old hash, so it's not a link that needs to be updated
+    if (!link.includes(oldHash))
+    {
+      UpdateOutOfSync(link, learningPathFile);
+
+      continue
+    }
 
     const pathStartIndex = link.indexOf(sourceDirectoryName);
     if (pathStartIndex === -1) { continue }
