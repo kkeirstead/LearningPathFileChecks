@@ -130,14 +130,14 @@ function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, l
 
     if (excludeLinksArray.some(excludeLink => link.toLowerCase().includes(excludeLink))) { continue; }
 
+    const pathStartIndex = link.indexOf(sourceDirectoryName);
+    if (pathStartIndex === -1) { continue }
+
     if (!link.includes(oldHash))
     {
       UpdateOutOfSync(link, learningPathFile);
       continue
     }
-
-    const pathStartIndex = link.indexOf(sourceDirectoryName);
-    if (pathStartIndex === -1) { continue }
 
     const linePrefixIndex = link.indexOf(linePrefix);
     const linkHasLineNumber = linePrefixIndex !== -1;
