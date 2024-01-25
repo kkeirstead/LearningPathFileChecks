@@ -1,12 +1,9 @@
-// TODO:
-// Don't just look for ) as end of link character
-// Don't print this out every single time a change is made (or add a silencing mechanism) -> look for identical comment that already exists? -> for potential reversions, maybe only scan the most recent LPSC check?
-
 const core = require('@actions/core');
 const fs = require('fs');
 const prevPathPrefix = "prev/";
 const headPathPrefix = "head/";
 const linePrefix = "#L";
+const separator = " | ";
 const sourceDirectoryName = core.getInput('sourceDirectoryName', { required: true });
 const oldHash = core.getInput('oldHash', { required: true });
 const newHash = core.getInput('newHash', { required: true });
@@ -20,7 +17,6 @@ var outOfSync = new Set();
 var manuallyReview = new Set();
 var suggestions = new Set();
 
-// Modified Files - Any files that have been modified in the PR that are present in a learning path
 function UpdateModifiedFiles(fileName, path, learningPathFile)
 {
   modifiedFilesUrlToFileName[path] = fileName;
@@ -40,13 +36,14 @@ function UpdateModifiedFiles(fileName, path, learningPathFile)
 
 function AssembleModifiedFilesOutput(fileName, path, learningPathFiles)
 {
-  var codeFileLink = "[" + fileName + "]" + "(" + path + ")"
-  return codeFileLink + " | **" + learningPathFiles.join(" ") + "**";
+  return CreateLink(fileName, path, undefined) + separator + BoldedText(learningPathFiles.join(" "));
 }
 
-// Manually Review - The PR Author should manually review these files to determine if they need to be updated;
-// this could be due to deletions, renames, or references to ambiguous lines (such as a newline) that cannot
-// be uniquely identified.
+function BoldedText(text)
+{
+  return "**" + text + "**";
+}
+
 function UpdateManuallyReview(fileName, path, learningPathFile, learningPathLineNumber, lineNumber = undefined)
 {
   manuallyReview.add(AssembleOutput(fileName, path, undefined, lineNumber, undefined, learningPathFile, learningPathLineNumber))
@@ -55,8 +52,7 @@ function UpdateManuallyReview(fileName, path, learningPathFile, learningPathLine
 
 function UpdateOutOfSync(link, learningPathFile)
 {
-  outOfSync.add(link + " | **" + learningPathFile + "**")
-
+  outOfSync.add(link + separator + BoldedText(learningPathFile))
   SetOutput('outOfSync', outOfSync)
 }
 
@@ -74,26 +70,26 @@ function SetOutput(outputName, outputSet)
   core.setOutput(outputName, Array.from(outputSet).join(","))
 }
 
+function CreateLink(fileName, path, lineNumber)
+{
+  var codeFileLink = "[" + fileName + "]" + "(" + path + ")"
+  return AppendLineNumber(codeFileLink, lineNumber)
+}
+
 function AssembleOutput(fileName, oldPath, newPath, oldLineNumber, newLineNumber, learningPathFile, learningPathLineNumber)
 {
-  var oldCodeFileLink = "[" + fileName + "]" + "(" + oldPath + ")"
-  oldCodeFileLink = AppendLineNumber(oldCodeFileLink, oldLineNumber)
-  var combinedCodeFileLink = oldCodeFileLink;
+  var codeFileLink = CreateLink(fileName, oldPath, oldLineNumber)
 
   if (newPath && newLineNumber) {
-    var newCodeFileLink = "[" + fileName + "]" + "(" + newPath + ")"
-    newCodeFileLink = AppendLineNumber(newCodeFileLink, newLineNumber)
-    combinedCodeFileLink += " -> " + newCodeFileLink;
+    codeFileLink += " -> " + CreateLink(fileName, newPath, newLineNumber)
   }
 
-  return combinedCodeFileLink + " | **update this link in " + AppendLineNumber(learningPathFile, learningPathLineNumber, undefined) + "**"
+  return codeFileLink + separator + "update this file in " + BoldedText(AppendLineNumber(learningPathFile, learningPathLineNumber, undefined));
 }
 
 function AppendLineNumber(text, lineNumber)
 {
-  if (!lineNumber) { return text }
-
-  return text + " " + linePrefix + lineNumber
+  return text + (!!lineNumber) ? (" " + linePrefix + lineNumber) : "";
 }
 
 function CheckForEndOfLink(str, startIndex)
@@ -102,35 +98,39 @@ function CheckForEndOfLink(str, startIndex)
   return illegalCharIndex;
 }
 
-function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedPRFiles, learningPathFile)
+function StripLineNumber(link, linePrefixIndex)
+{
+  return link.substring(0, linePrefixIndex);
+}
+
+function GetContent(path) {
+  try {
+    return fs.readFileSync(path, "utf8")
+  }
+  catch (error) {}
+
+  return undefined;
+}
+
+function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, learningPathFile)
 {
   // Get all indices where a link to the repo is found within the current learning path file
   var linkIndices = [];
-  for(var pos = headLearningPathFileContentStr.indexOf(repoURLToSearch); pos !== -1; pos = headLearningPathFileContentStr.indexOf(repoURLToSearch, pos + 1)) {
+  for(var pos = learningPathContents.indexOf(repoURLToSearch); pos !== -1; pos = learningPathContents.indexOf(repoURLToSearch, pos + 1)) {
       linkIndices.push(pos);
   }
 
   for(let startOfLink of linkIndices)
   {
     // Clean up the link, determine if it has a line number suffix
-    const endOfLink = startOfLink + CheckForEndOfLink(headLearningPathFileContentStr, startOfLink)
-    const link = headLearningPathFileContentStr.substring(startOfLink, endOfLink);
+    const endOfLink = startOfLink + CheckForEndOfLink(learningPathContents, startOfLink)
+    const link = learningPathContents.substring(startOfLink, endOfLink);
 
-    let shouldExcludeLink = false;
-    for (let excludeLink of excludeLinksArray)
-    {
-      if (link.toLowerCase().includes(excludeLink)) {
-        shouldExcludeLink = true;
-        break; 
-      }
-    }
-
-    if (shouldExcludeLink) { continue; }
+    if (excludeLinksArray.some(excludeLink => link.toLowerCase().includes(excludeLink))) { continue; }
 
     if (!link.includes(oldHash))
     {
       UpdateOutOfSync(link, learningPathFile);
-
       continue
     }
 
@@ -142,91 +142,47 @@ function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedP
     const pathEndIndex = linkHasLineNumber ? linePrefixIndex : endOfLink;
 
     // Check if the file being referenced by the link is one of the modified files in the PR
-    const filePath = link.substring(pathStartIndex, pathEndIndex);
-    if (modifiedPRFiles.includes(filePath))
+    const linkFilePath = link.substring(pathStartIndex, pathEndIndex);
+    if (modifiedPRFiles.includes(linkFilePath))
     {
-      const fileName = filePath.substring(filePath.lastIndexOf('/') + 1);
+      const fileName = linkFilePath.substring(linkFilePath.lastIndexOf('/') + 1);
 
-      UpdateModifiedFiles(
-        fileName,
-        linkHasLineNumber ? link.substring(0, linePrefixIndex) : link,
-        learningPathFile);
+      UpdateModifiedFiles(fileName, linkHasLineNumber ? StripLineNumber(link, linePrefixIndex) : link, learningPathFile);
 
       // This is the line number in the learning path file that contains the link - not the #L line number in the link itself
-      const learningPathLineNumber = headLearningPathFileContentStr.substring(0, startOfLink).split("\n").length;
+      const learningPathLineNumber = learningPathContents.substring(0, startOfLink).split("\n").length;
 
-      // Get the contents of the referenced file from prev (old) and head (new) to compare them
-      var headContent = ""
-      try {
-        headContent = fs.readFileSync(headPathPrefix + filePath, "utf8")
-      }
-      catch (error) {
-
-        UpdateManuallyReview(
-          fileName,
-          link,
-          learningPathFile,
-          learningPathLineNumber);
+      var headContent = GetContent(headPathPrefix + linkFilePath)
+      if (!headContent) { 
+        UpdateManuallyReview(fileName, link, learningPathFile, learningPathLineNumber);
         continue
       }
-
-      if (!linkHasLineNumber) { continue }
-
-      var prevContent = ""
-      try {
-        prevContent = fs.readFileSync(prevPathPrefix + filePath, "utf8")
-      }
-      catch (error) { continue }
-
-      const linkLineNumber = Number(link.substring(linePrefixIndex + linePrefix.length, link.length));
-
       const headContentLines = headContent.toString().split("\n");
+
+      if (!linkHasLineNumber) { continue; }
+      const oldLineNumber = Number(link.substring(linePrefixIndex + linePrefix.length, link.length));
+
+      var prevContent = GetContent(prevPathPrefix + linkFilePath)
+      if (!prevContent) { continue; }
       const prevContentLines = prevContent.toString().split("\n");
 
-      if (prevContent.length < linkLineNumber) // This shouldn't happen, unless the learning path is already out of date.
+      if (prevContentLines.length < oldLineNumber)
       {
-        UpdateManuallyReview(
-          fileName,
-          link,
-          learningPathFile,
-          learningPathLineNumber,
-          linkLineNumber);
+        UpdateManuallyReview(fileName, link, learningPathFile, learningPathLineNumber, oldLineNumber);
       }
-      // If the referenced line in the head branch is identical to the line in the head branch, then the line number is still considered correct.
-      // Note that this can miss cases with ambiguous code that happens to align - this is a limitation of the heuristic. Learning Path authors
-      // are encouraged to choose lines of code that are unique (e.g. not a newline, open brace, etc.)
-      else if (headContentLines.length < linkLineNumber || prevContentLines[linkLineNumber - 1].trim() !== headContentLines[linkLineNumber - 1].trim())
+      else if (headContentLines.length < oldLineNumber || prevContentLines[oldLineNumber - 1].trim() !== headContentLines[oldLineNumber - 1].trim())
       {
-        // Check for multiple instances of the referenced line in the file - if there are multiple, then we don't know
-        // which one to reference, so we'll ask the PR author to manually review the file.
-        const lastIndex = headContentLines.lastIndexOf(prevContentLines[linkLineNumber - 1]) + 1;
-        const firstIndex = headContentLines.indexOf(prevContentLines[linkLineNumber - 1]) + 1;
+        const newLineNumberLast = headContentLines.lastIndexOf(prevContentLines[oldLineNumber - 1]) + 1;
+        const newLineNumberFirst = headContentLines.indexOf(prevContentLines[oldLineNumber - 1]) + 1;
 
-        if (lastIndex != firstIndex) // Indeterminate; multiple matches found in the file
+        if (newLineNumberLast !== newLineNumberFirst) // Multiple matches found in the file
         {
-          UpdateManuallyReview(
-            fileName,
-            link,
-            learningPathFile,
-            learningPathLineNumber,
-            linkLineNumber);
+          UpdateManuallyReview(fileName, link, learningPathFile, learningPathLineNumber, oldLineNumber);
         }
         else
         {
-          let oldLineNumber = linkLineNumber;
-          let newLineNumber = firstIndex;
-
-          let updatedLink = link.replace(oldHash, newHash);
-          updatedLink = updatedLink.substring(0, linePrefixIndex) + linePrefix + newLineNumber;
-
-          UpdateSuggestions(
-            fileName,
-            link,
-            updatedLink,
-            learningPathFile,
-            learningPathLineNumber,
-            oldLineNumber,
-            newLineNumber)
+          let updatedLink = StripLineNumber(link.replace(oldHash, newHash), linePrefixIndex) + linePrefix + newLineNumber;
+          UpdateSuggestions(fileName, link, updatedLink, learningPathFile, learningPathLineNumber, oldLineNumber, newLineNumberFirst);
         }
       }
     }
@@ -244,14 +200,13 @@ const main = async () => {
     if (changedFilePaths === null || changedFilePaths.trim() === "") { return }
 
     // Scan each file in the learningPaths directory
-    fs.readdir(headLearningPathsDirectory, (err, files) => {
+    fs.readdir(headLearningPathsDirectory, (_, files) => {
       files.forEach(learningPathFile => {
-
         try {
-          const headLearningPathFileContent = fs.readFileSync(headLearningPathsDirectory + "/" + learningPathFile, "utf8")
-          if (headLearningPathFileContent)
+          const learningPathContents = fs.readFileSync(headLearningPathsDirectory + "/" + learningPathFile, "utf8")
+          if (learningPathContents)
           {
-            CompareFiles(headLearningPathFileContent, repoURLToSearch, changedFilePaths.split(' '), learningPathFile)
+            ValidateLinks(learningPathContents, repoURLToSearch, changedFilePaths.split(' '), learningPathFile)
           }
         } catch (error) {
           console.log("Error: " + error)
