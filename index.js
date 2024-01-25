@@ -136,8 +136,6 @@ function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, l
       continue
     }
 
-    console.log("1: " + link);
-
     const pathStartIndex = link.indexOf(sourceDirectoryName);
     if (pathStartIndex === -1) { continue }
 
@@ -158,7 +156,6 @@ function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, l
 
       var headContent = GetContent(headPathPrefix + linkFilePath)
       if (!headContent) {
-        console.log("2: " + link);
         UpdateManuallyReview(fileName, link, learningPathFile, learningPathLineNumber);
         continue
       }
@@ -173,7 +170,6 @@ function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, l
 
       if (prevContentLines.length < oldLineNumber)
       {
-        console.log("3: " + link);
         UpdateManuallyReview(fileName, link, learningPathFile, learningPathLineNumber, oldLineNumber);
       }
       else if (headContentLines.length < oldLineNumber || prevContentLines[oldLineNumber - 1].trim() !== headContentLines[oldLineNumber - 1].trim())
@@ -183,12 +179,10 @@ function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, l
 
         if (newLineNumberLast !== newLineNumberFirst) // Multiple matches found in the file
         {
-          console.log("4: " + link);
           UpdateManuallyReview(fileName, link, learningPathFile, learningPathLineNumber, oldLineNumber);
         }
         else
         {
-          console.log("5: " + link);
           let updatedLink = StripLineNumber(link.replace(oldHash, newHash), linePrefixIndex) + linePrefix + newLineNumberFirst;
           UpdateSuggestions(fileName, link, updatedLink, learningPathFile, learningPathLineNumber, oldLineNumber, newLineNumberFirst);
         }
