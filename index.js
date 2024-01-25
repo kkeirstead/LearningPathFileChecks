@@ -29,10 +29,16 @@ function UpdateModifiedFiles(fileName, path, learningPathFile)
   for (currPath in modifiedFilesDict)
   {
     const fileName = modifiedFilesUrlToFileName[currPath];
-    modifiedFiles.add(AssembleOutput(fileName, currPath, undefined, undefined, undefined, Array.from(modifiedFilesDict[currPath]).join(" ")));
+    modifiedFiles.add(AssembleModifiedFilesOutput(fileName, currPath, Array.from(modifiedFilesDict[currPath])));
   }
 
   SetOutput('modifiedFiles', modifiedFiles)
+}
+
+function AssembleModifiedFilesOutput(fileName, path, learningPathFiles)
+{
+  var codeFileLink = "[" + fileName + "]" + "(" + path + ")"
+  return codeFileLink + "...**" + learningPathFiles.join(" ") + "**";
 }
 
 // Manually Review - The PR Author should manually review these files to determine if they need to be updated;
@@ -70,7 +76,7 @@ function AssembleOutput(fileName, oldPath, newPath, oldLineNumber, newLineNumber
     combinedCodeFileLink += " -> " + newCodeFileLink;
   }
 
-  return combinedCodeFileLink + "    " + "**update this link in" + AppendLineNumber(learningPathFile, learningPathLineNumber, undefined) + "**"
+  return combinedCodeFileLink + "..." + "**update this link in " + AppendLineNumber(learningPathFile, learningPathLineNumber, undefined) + "**"
 }
 
 function AppendLineNumber(text, lineNumber)
