@@ -100,7 +100,11 @@ function CompareFiles(prevLearningPathFileContentStr, repoURLToSearch, modifiedP
     const endOfLink = startOfLink + CheckForEndOfLink(prevLearningPathFileContentStr, startOfLink)
     const link = prevLearningPathFileContentStr.substring(startOfLink, endOfLink);
 
+    console.log("Link: " + link);
+
     if (!link.includes(oldHash)) { continue } // This link doesn't contain the old hash, so it's not a link that needs to be updated
+
+    console.log("Continuing");
 
     const pathStartIndex = link.indexOf(sourceDirectoryName);
     if (pathStartIndex === -1) { continue }
