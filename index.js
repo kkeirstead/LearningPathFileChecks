@@ -106,11 +106,7 @@ function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedP
     const endOfLink = startOfLink + CheckForEndOfLink(headLearningPathFileContentStr, startOfLink)
     const link = headLearningPathFileContentStr.substring(startOfLink, endOfLink);
 
-    console.log("Link: " + link);
-
     if (!link.includes(oldHash)) { continue } // This link doesn't contain the old hash, so it's not a link that needs to be updated
-
-    console.log("Continuing");
 
     const pathStartIndex = link.indexOf(sourceDirectoryName);
     if (pathStartIndex === -1) { continue }
@@ -191,7 +187,11 @@ function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedP
         }
         else
         {
+          let oldLineNumber = linkLineNumber;
+          let newLineNumber = firstIndex;
+
           let updatedLink = link.replace(oldHash, newHash);
+          updatedLink = updatedLink.substring(0, linePrefixIndex) + linePrefix + lineNumber;
 
           UpdateSuggestions(
             fileName,
@@ -199,8 +199,8 @@ function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedP
             updatedLink,
             learningPathFile,
             learningPathLineNumber,
-            linkLineNumber,
-            firstIndex)
+            oldLineNumber,
+            newLineNumber)
         }
       }
     }
