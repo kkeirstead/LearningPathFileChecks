@@ -86,19 +86,19 @@ function CheckForEndOfLink(str, startIndex)
   return illegalCharIndex;
 }
 
-function CompareFiles(prevLearningPathFileContentStr, repoURLToSearch, modifiedPRFiles, learningPathFile)
+function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedPRFiles, learningPathFile)
 {
   // Get all indices where a link to the repo is found within the current learning path file
   var linkIndices = [];
-  for(var pos = prevLearningPathFileContentStr.indexOf(repoURLToSearch); pos !== -1; pos = prevLearningPathFileContentStr.indexOf(repoURLToSearch, pos + 1)) {
+  for(var pos = headLearningPathFileContentStr.indexOf(repoURLToSearch); pos !== -1; pos = headLearningPathFileContentStr.indexOf(repoURLToSearch, pos + 1)) {
       linkIndices.push(pos);
   }
 
   for(let startOfLink of linkIndices)
   {
     // Clean up the link, determine if it has a line number suffix
-    const endOfLink = startOfLink + CheckForEndOfLink(prevLearningPathFileContentStr, startOfLink)
-    const link = prevLearningPathFileContentStr.substring(startOfLink, endOfLink);
+    const endOfLink = startOfLink + CheckForEndOfLink(headLearningPathFileContentStr, startOfLink)
+    const link = headLearningPathFileContentStr.substring(startOfLink, endOfLink);
 
     console.log("Link: " + link);
 
@@ -125,7 +125,7 @@ function CompareFiles(prevLearningPathFileContentStr, repoURLToSearch, modifiedP
         learningPathFile);
 
       // This is the line number in the learning path file that contains the link - not the #L line number in the link itself
-      const learningPathLineNumber = prevLearningPathFileContentStr.substring(0, startOfLink).split("\n").length;
+      const learningPathLineNumber = headLearningPathFileContentStr.substring(0, startOfLink).split("\n").length;
 
       // Get the contents of the referenced file from prev (old) and head (new) to compare them
       var headContent = ""
@@ -206,20 +206,20 @@ const main = async () => {
   try {
     const learningPathDirectory = core.getInput('learningPathsDirectory', { required: true });
     const repoURLToSearch = core.getInput('repoURLToSearch', { required: true });
-    const prevLearningPathsDirectory = prevPathPrefix + learningPathDirectory;
+    const headLearningPathsDirectory = headPathPrefix + learningPathDirectory;
     const changedFilePaths = core.getInput('changedFilePaths', {required: false});
     
     if (changedFilePaths === null || changedFilePaths.trim() === "") { return }
 
     // Scan each file in the learningPaths directory
-    fs.readdir(prevLearningPathsDirectory, (err, files) => {
+    fs.readdir(headLearningPathsDirectory, (err, files) => {
       files.forEach(learningPathFile => {
 
         try {
-          const prevLearningPathFileContent = fs.readFileSync(prevLearningPathsDirectory + "/" + learningPathFile, "utf8")
-          if (prevLearningPathFileContent)
+          const headLearningPathFileContent = fs.readFileSync(headLearningPathsDirectory + "/" + learningPathFile, "utf8")
+          if (headLearningPathFileContent)
           {
-            CompareFiles(prevLearningPathFileContent, repoURLToSearch, changedFilePaths.split(' '), learningPathFile)
+            CompareFiles(headLearningPathFileContent, repoURLToSearch, changedFilePaths.split(' '), learningPathFile)
           }
         } catch (error) {
           console.log("Error: " + error)
