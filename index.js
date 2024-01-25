@@ -89,7 +89,9 @@ function AssembleOutput(fileName, oldPath, newPath, oldLineNumber, newLineNumber
 
 function AppendLineNumber(text, lineNumber)
 {
-  return text + (!!lineNumber) ? (" " + linePrefix + lineNumber) : "";
+  if (!lineNumber) { return text }
+
+  return text + " " + linePrefix + lineNumber
 }
 
 function CheckForEndOfLink(str, startIndex)
@@ -134,6 +136,8 @@ function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, l
       continue
     }
 
+    console.log("1: " + link);
+
     const pathStartIndex = link.indexOf(sourceDirectoryName);
     if (pathStartIndex === -1) { continue }
 
@@ -153,7 +157,8 @@ function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, l
       const learningPathLineNumber = learningPathContents.substring(0, startOfLink).split("\n").length;
 
       var headContent = GetContent(headPathPrefix + linkFilePath)
-      if (!headContent) { 
+      if (!headContent) {
+        console.log("2: " + link);
         UpdateManuallyReview(fileName, link, learningPathFile, learningPathLineNumber);
         continue
       }
@@ -168,6 +173,7 @@ function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, l
 
       if (prevContentLines.length < oldLineNumber)
       {
+        console.log("3: " + link);
         UpdateManuallyReview(fileName, link, learningPathFile, learningPathLineNumber, oldLineNumber);
       }
       else if (headContentLines.length < oldLineNumber || prevContentLines[oldLineNumber - 1].trim() !== headContentLines[oldLineNumber - 1].trim())
@@ -177,10 +183,12 @@ function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, l
 
         if (newLineNumberLast !== newLineNumberFirst) // Multiple matches found in the file
         {
+          console.log("4: " + link);
           UpdateManuallyReview(fileName, link, learningPathFile, learningPathLineNumber, oldLineNumber);
         }
         else
         {
+          console.log("5: " + link);
           let updatedLink = StripLineNumber(link.replace(oldHash, newHash), linePrefixIndex) + linePrefix + newLineNumber;
           UpdateSuggestions(fileName, link, updatedLink, learningPathFile, learningPathLineNumber, oldLineNumber, newLineNumberFirst);
         }
