@@ -116,20 +116,16 @@ function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedP
     const endOfLink = startOfLink + CheckForEndOfLink(headLearningPathFileContentStr, startOfLink)
     const link = headLearningPathFileContentStr.substring(startOfLink, endOfLink);
 
-    let excludeLink = false;
+    let shouldExcludeLink = false;
     for (let excludeLink of excludeLinksArray)
     {
       if (link.toLowerCase().includes(excludeLink)) {
-        excludeLink = true;
+        shouldExcludeLink = true;
         break; 
       }
     }
 
-    console.log("Exclude Link? " + excludeLink + " " + link)
-
-    if (excludeLink) { continue; }
-
-    console.log("Are we here?");
+    if (shouldExcludeLink) { continue; }
 
     if (!link.includes(oldHash))
     {
