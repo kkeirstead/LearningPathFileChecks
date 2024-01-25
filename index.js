@@ -189,7 +189,7 @@ function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, l
         else
         {
           console.log("5: " + link);
-          let updatedLink = StripLineNumber(link.replace(oldHash, newHash), linePrefixIndex) + linePrefix + newLineNumber;
+          let updatedLink = StripLineNumber(link.replace(oldHash, newHash), linePrefixIndex) + linePrefix + newLineNumberFirst;
           UpdateSuggestions(fileName, link, updatedLink, learningPathFile, learningPathLineNumber, oldLineNumber, newLineNumberFirst);
         }
       }
