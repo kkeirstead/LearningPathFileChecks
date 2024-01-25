@@ -125,7 +125,11 @@ function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedP
       }
     }
 
+    console.log("Exclude Link? " + excludeLink + " " + link)
+
     if (excludeLink) { continue; }
+
+    console.log("Are we here?");
 
     if (!link.includes(oldHash))
     {
