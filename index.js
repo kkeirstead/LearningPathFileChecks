@@ -38,7 +38,7 @@ function UpdateModifiedFiles(fileName, path, learningPathFile)
 function AssembleModifiedFilesOutput(fileName, path, learningPathFiles)
 {
   var codeFileLink = "[" + fileName + "]" + "(" + path + ")"
-  return codeFileLink + "...**" + learningPathFiles.join(" ") + "**";
+  return codeFileLink + " | **" + learningPathFiles.join(" ") + "**";
 }
 
 // Manually Review - The PR Author should manually review these files to determine if they need to be updated;
@@ -76,12 +76,12 @@ function AssembleOutput(fileName, oldPath, newPath, oldLineNumber, newLineNumber
     combinedCodeFileLink += " -> " + newCodeFileLink;
   }
 
-  return combinedCodeFileLink + "..." + "**update this link in " + AppendLineNumber(learningPathFile, learningPathLineNumber, undefined) + "**"
+  return combinedCodeFileLink + " | **update this link in " + AppendLineNumber(learningPathFile, learningPathLineNumber, undefined) + "**"
 }
 
 function AppendLineNumber(text, lineNumber)
 {
-  if (lineNumber === undefined) { return text }
+  if (!lineNumber) { return text }
 
   return text + " " + linePrefix + lineNumber
 }
@@ -191,7 +191,7 @@ function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedP
           let newLineNumber = firstIndex;
 
           let updatedLink = link.replace(oldHash, newHash);
-          updatedLink = updatedLink.substring(0, linePrefixIndex) + linePrefix + lineNumber;
+          updatedLink = updatedLink.substring(0, linePrefixIndex) + linePrefix + newLineNumber;
 
           UpdateSuggestions(
             fileName,
