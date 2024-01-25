@@ -10,6 +10,8 @@ const linePrefix = "#L";
 const sourceDirectoryName = core.getInput('sourceDirectoryName', { required: true });
 const oldHash = core.getInput('oldHash', { required: true });
 const newHash = core.getInput('newHash', { required: true });
+const excludeLinks = core.getInput('excludeLinks', { required: false });
+const excludeLinksArray = excludeLinks ? excludeLinks.split(',').map(function(item) { return item.toLowerCase().trim() }) : [];
 
 modifiedFilesDict = {};
 modifiedFilesUrlToFileName = {};
@@ -113,6 +115,11 @@ function CompareFiles(headLearningPathFileContentStr, repoURLToSearch, modifiedP
     // Clean up the link, determine if it has a line number suffix
     const endOfLink = startOfLink + CheckForEndOfLink(headLearningPathFileContentStr, startOfLink)
     const link = headLearningPathFileContentStr.substring(startOfLink, endOfLink);
+
+    for (let excludeLink of excludeLinksArray)
+    {
+      if (link.toLowerCase().includes(excludeLink)) { continue }
+    }
 
     if (!link.includes(oldHash))
     {

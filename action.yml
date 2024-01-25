@@ -19,6 +19,9 @@ inputs:
   newHash:
     description: 'The hash to be inserted into the updated learning path'
     required: true
+  excludeLinks:
+    description: 'Comma separated strings to exclude from processing'
+    required: false
 runs:
   using: 'node16'
   main: 'index.js'
