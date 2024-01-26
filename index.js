@@ -84,7 +84,7 @@ function AssembleOutput(fileName, oldPath, newPath, oldLineNumber, newLineNumber
     codeFileLink += " -> " + CreateLink(fileName, newPath, newLineNumber)
   }
 
-  return codeFileLink + separator + "update this file in " + BoldedText(AppendLineNumber(learningPathFile, learningPathLineNumber, undefined));
+  return codeFileLink + separator + BoldedText(AppendLineNumber(learningPathFile, learningPathLineNumber, undefined));
 }
 
 function AppendLineNumber(text, lineNumber)
