@@ -206,17 +206,16 @@ const main = async () => {
   try {
     const learningPathDirectory = core.getInput('learningPathsDirectory', { required: true });
     const repoURLToSearch = core.getInput('repoURLToSearch', { required: true });
-    const headLearningPathsDirectory = learningPathDirectory;
     const changedFilePaths = core.getInput('changedFilePaths', {required: false});
     const learningPathHashFile = core.getInput('learningPathHashFile', { required: true });
 
     if (changedFilePaths === null || changedFilePaths.trim() === "") { return }
 
     // Scan each file in the learningPaths directory
-    fs.readdir(headLearningPathsDirectory, (_, files) => {
+    fs.readdir(learningPathDirectory, (_, files) => {
       files.forEach(learningPathFile => {
         try {
-          const learningPathContents = fs.readFileSync(headLearningPathsDirectory + "/" + learningPathFile, "utf8")
+          const learningPathContents = fs.readFileSync(learningPathDirectory + "/" + learningPathFile, "utf8")
           if (learningPathContents)
           {
             ValidateLinks(learningPathContents, repoURLToSearch, changedFilePaths.split(' '), learningPathFile)
@@ -231,17 +230,15 @@ const main = async () => {
     fs.writeFileSync(learningPathHashFile, newHash, "utf8");
     AppendModifiedFilesToCommit(learningPathHashFile)
 
-    let suggestionsArray = Array.from(suggestions);
-
     // Scan each file in the learningPaths directory
-    fs.readdir(headLearningPathsDirectory, (_, files) => {
+    fs.readdir(learningPathDirectory, (_, files) => {
       files.forEach(learningPathFile => {
         try {
-          const fullPath = headLearningPathsDirectory + "/" + learningPathFile
-          const content = fs.readFileSync(fullPath, "utf8")
+          const content = fs.readFileSync(learningPathDirectory + "/" + learningPathFile, "utf8")
 
           var replacedContent = content
 
+          let suggestionsArray = Array.from(suggestions);
           if (suggestionsArray && suggestionsArray.length > 0) {
             suggestionsArray.forEach(suggestion => {
               const suggestionArray = suggestion.split(oldNewLinkSeparator)
