@@ -18,6 +18,13 @@ var manuallyReview = new Set();
 var suggestions = new Set();
 
 const oldNewLinkSeparator = ' -> ';
+let modifiedFilesToCommit = [];
+
+function AppendModifiedFilesToCommit(path)
+{
+  modifiedFiles.push(path)
+  core.setOutput('modifiedFiles', modifiedFiles.join(' '))
+}
 
 function ReplaceOldWithNewText(content, oldText, newText)
 {
@@ -172,7 +179,7 @@ function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, l
       const oldLineNumber = Number(link.substring(linePrefixIndex + linePrefix.length, link.length));
 
       var prevContent = GetContent(prevPathPrefix + linkFilePath)
-      if (!prevContent) { console.log("File: " + fileName); console.log("Missing prev"); continue; }
+      if (!prevContent) { continue; }
       const prevContentLines = prevContent.toString().split("\n");
 
       if (prevContentLines.length < oldLineNumber)
@@ -227,6 +234,7 @@ const main = async () => {
     const learningPathHashFile = headPathPrefix + core.getInput('learningPathHashFile', { required: true });
 
     fs.writeFileSync(learningPathHashFile, newHash, "utf8");
+    AppendModifiedFilesToCommit(learningPathHashFile)
 
     // Scan each file in the learningPaths directory
     fs.readdir(headLearningPathsDirectory, (_, files) => {
@@ -235,20 +243,13 @@ const main = async () => {
           const fullPath = headLearningPathsDirectory + "/" + learningPathFile
           const content = fs.readFileSync(fullPath, "utf8")
 
-          console.log("File: " + learningPathFile)
-
           var replacedContent = content
 
-          console.log("Suggestions: " + suggestions)
-          suggestionsArray = Array.from(suggestions)
-          if (suggestionsArray && suggestionsArray.length > 0) {
-            suggestionsArray.forEach(suggestion => {
-              console.log("Suggestion: " + suggestion)
+          if (suggestions && suggestions.length > 0) {
+            suggestions.forEach(suggestion => {
               const suggestionArray = suggestion.split(oldNewLinkSeparator)
               var oldLink = suggestionArray[0]
               var newLink = suggestionArray[1]
-              console.log("Old Link: " + oldLink)
-              console.log("New Link: " + newLink)
               oldLink = oldLink.substring(oldLink.indexOf('(') + 1, oldLink.lastIndexOf(')'))
               newLink = newLink.substring(newLink.indexOf('(') + 1, newLink.lastIndexOf(')'))
               replacedContent = ReplaceOldWithNewText(replacedContent, oldLink, newLink)
@@ -260,6 +261,9 @@ const main = async () => {
           fs.writeFileSync(headLearningPathsDirectory + "/" + learningPathFile, replacedContent, "utf8");
           //actionUtils.writeFile(learningPathDirectory + "/" + learningPathFile, learningPathFileContentStr);
 
+          if (content !== replacedContent) {
+            AppendModifiedFilesToCommit(fullPath)
+          }
         } catch (error) {
           console.log("Error: " + error)
           console.log("Could not find learning path file: " + learningPathFile)
