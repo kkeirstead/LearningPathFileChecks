@@ -17,6 +17,20 @@ var outOfSync = new Set();
 var manuallyReview = new Set();
 var suggestions = new Set();
 
+const oldNewLinkSeparator = ' -> ';
+let modifiedFiles = [];
+
+function AppendModifiedFiles(path)
+{
+  modifiedFiles.push(path)
+  core.setOutput('modifiedFiles', modifiedFiles.join(' '))
+}
+
+function ReplaceOldWithNewText(content, oldText, newText)
+{
+  return content.replaceAll(oldText, newText);
+}
+
 function UpdateModifiedFiles(fileName, path, learningPathFile)
 {
   modifiedFilesUrlToFileName[path] = fileName;
@@ -81,7 +95,7 @@ function AssembleOutput(fileName, oldPath, newPath, oldLineNumber, newLineNumber
   var codeFileLink = CreateLink(fileName, oldPath, oldLineNumber)
 
   if (newPath && newLineNumber) {
-    codeFileLink += " -> " + CreateLink(fileName, newPath, newLineNumber)
+    codeFileLink += oldNewLinkSeparator + CreateLink(fileName, newPath, newLineNumber)
   }
 
   return codeFileLink + separator + BoldedText(AppendLineNumber(learningPathFile, learningPathLineNumber, undefined));
