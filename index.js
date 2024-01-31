@@ -241,7 +241,7 @@ const main = async () => {
           var replacedContent = content
 
           let suggestionsArray = Array.from(suggestions);
-          console.log(suggestionsArray.length());
+          console.log(suggestionsArray.length);
           if (suggestionsArray && suggestionsArray.length > 0) {
             suggestionsArray.forEach(suggestion => {
               console.log(suggestion);
