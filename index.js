@@ -210,11 +210,14 @@ const main = async () => {
 
     // Scan each file in the learningPaths directory
     fs.readdir(headLearningPathsDirectory, (_, files) => {
+      console.log("Files: " + files)
       files.forEach(learningPathFile => {
+        console.log("File: " + learningPathFile)
         try {
           const learningPathContents = fs.readFileSync(headLearningPathsDirectory + "/" + learningPathFile, "utf8")
           if (learningPathContents)
           {
+            console.log("Learning Path Contents: " + learningPathContents);            
             ValidateLinks(learningPathContents, repoURLToSearch, changedFilePaths.split(' '), learningPathFile)
           }
         } catch (error) {
