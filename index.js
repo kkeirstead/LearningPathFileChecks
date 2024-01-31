@@ -23,7 +23,7 @@ let modifiedFilesToCommit = [];
 function AppendModifiedFilesToCommit(path)
 {
   modifiedFilesToCommit.push(path)
-  core.setOutput('modifiedFiles', modifiedFiles.join(' '))
+  core.setOutput('modifiedFilesToCommit', modifiedFilesToCommit.join(' '))
 }
 
 function ReplaceOldWithNewText(content, oldText, newText)
