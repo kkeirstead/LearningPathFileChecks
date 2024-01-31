@@ -234,8 +234,6 @@ const main = async () => {
     fs.readdir(learningPathDirectory, (_, files) => {
       files.forEach(learningPathFile => {
         try {
-          console.log("Processing file: " + learningPathFile)
-
           const fullPath = learningPathDirectory + "/" + learningPathFile
           const content = fs.readFileSync(fullPath, "utf8")
 
