@@ -234,13 +234,17 @@ const main = async () => {
     fs.readdir(learningPathDirectory, (_, files) => {
       files.forEach(learningPathFile => {
         try {
+          console.log("Processing file: " + learningPathFile)
+
           const content = fs.readFileSync(learningPathDirectory + "/" + learningPathFile, "utf8")
 
           var replacedContent = content
 
           let suggestionsArray = Array.from(suggestions);
+          console.log(suggestionsArray.length());
           if (suggestionsArray && suggestionsArray.length > 0) {
             suggestionsArray.forEach(suggestion => {
+              console.log(suggestion);
               const suggestionArray = suggestion.split(oldNewLinkSeparator)
               var oldLink = suggestionArray[0]
               var newLink = suggestionArray[1]
