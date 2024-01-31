@@ -243,13 +243,20 @@ const main = async () => {
           const fullPath = headLearningPathsDirectory + "/" + learningPathFile
           const content = fs.readFileSync(fullPath, "utf8")
 
+          console.log("File: " + learningPathFile)
+          console.log("Content: " + content)
+
           var replacedContent = content
 
+          console.log("Suggestions: " + suggestions)
           if (suggestions && suggestions.length > 0) {
             suggestions.forEach(suggestion => {
+              console.log("Suggestion: " + suggestion)
               const suggestionArray = suggestion.split(oldNewLinkSeparator)
               var oldLink = suggestionArray[0]
               var newLink = suggestionArray[1]
+              console.log("Old Link: " + oldLink)
+              console.log("New Link: " + newLink)
               oldLink = oldLink.substring(oldLink.indexOf('(') + 1, oldLink.lastIndexOf(')'))
               newLink = newLink.substring(newLink.indexOf('(') + 1, newLink.lastIndexOf(')'))
               replacedContent = ReplaceOldWithNewText(replacedContent, oldLink, newLink)
