@@ -1,7 +1,7 @@
 const core = require('@actions/core');
 const fs = require('fs');
 const prevPathPrefix = "prev/";
-const headPathPrefix = "head/";
+const headPathPrefix = "";
 const linePrefix = "#L";
 const separator = " | ";
 const sourceDirectoryName = core.getInput('sourceDirectoryName', { required: true });
