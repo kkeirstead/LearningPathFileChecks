@@ -1,13 +1,7 @@
-const core = require('@actions/core');
-const fs = require('fs');
+const actionUtils = require('../action-utils.js');
 const prevPathPrefix = "prev/";
 const linePrefix = "#L";
 const separator = " | ";
-const sourceDirectoryName = core.getInput('sourceDirectoryName', { required: true });
-const oldHash = core.getInput('oldHash', { required: true });
-const newHash = core.getInput('newHash', { required: true });
-const excludeLinks = core.getInput('excludeLinks', { required: false });
-const excludeLinksArray = excludeLinks ? excludeLinks.split(',').map(function(item) { return item.toLowerCase().trim() }) : [];
 
 modifiedFilesDict = {};
 modifiedFilesUrlToFileName = {};
@@ -19,7 +13,7 @@ var suggestions = new Set();
 const oldNewLinkSeparator = ' -> ';
 let modifiedFilesToCommit = [];
 
-function AppendModifiedFilesToCommit(path)
+function AppendModifiedFilesToCommit(path, core)
 {
   modifiedFilesToCommit.push(path)
   core.setOutput('modifiedFilesToCommit', modifiedFilesToCommit.join(' '))
@@ -30,7 +24,7 @@ function ReplaceOldWithNewText(content, oldText, newText)
   return content.replaceAll(oldText, newText);
 }
 
-function UpdateModifiedFiles(fileName, path, learningPathFile)
+function UpdateModifiedFiles(fileName, path, learningPathFile, core)
 {
   modifiedFilesUrlToFileName[path] = fileName;
 
@@ -44,7 +38,7 @@ function UpdateModifiedFiles(fileName, path, learningPathFile)
     modifiedFiles.add(AssembleModifiedFilesOutput(fileName, currPath, Array.from(modifiedFilesDict[currPath])));
   }
 
-  SetOutput('modifiedFiles', modifiedFiles)
+  SetOutput('modifiedFiles', modifiedFiles, core)
 }
 
 function AssembleModifiedFilesOutput(fileName, path, learningPathFiles)
@@ -57,25 +51,25 @@ function BoldedText(text)
   return "**" + text + "**";
 }
 
-function UpdateManuallyReview(fileName, path, learningPathFile, learningPathLineNumber, lineNumber = undefined)
+function UpdateManuallyReview(fileName, path, learningPathFile, learningPathLineNumber, core, lineNumber = undefined)
 {
   manuallyReview.add(AssembleOutput(fileName, path, undefined, lineNumber, undefined, learningPathFile, learningPathLineNumber))
-  SetOutput('manuallyReview', manuallyReview)
+  SetOutput('manuallyReview', manuallyReview, core)
 }
 
-function UpdateOutOfSync(link, learningPathFile)
+function UpdateOutOfSync(link, learningPathFile, core)
 {
   outOfSync.add(link + separator + BoldedText(learningPathFile))
-  SetOutput('outOfSync', outOfSync)
+  SetOutput('outOfSync', outOfSync, core)
 }
 
-function UpdateSuggestions(fileName, oldPath, newPath, learningPathFile, learningPathLineNumber, oldLineNumber, newLineNumber)
+function UpdateSuggestions(fileName, oldPath, newPath, learningPathFile, learningPathLineNumber, oldLineNumber, newLineNumber, core)
 {
   suggestions.add(AssembleOutput(fileName, oldPath, newPath, oldLineNumber, newLineNumber, learningPathFile, learningPathLineNumber))
-  SetOutput('suggestions', suggestions)
+  SetOutput('suggestions', suggestions, core)
 }
 
-function SetOutput(outputName, outputSet)
+function SetOutput(outputName, outputSet, core)
 {
   core.setOutput(outputName, Array.from(outputSet).join(","))
 }
@@ -117,14 +111,14 @@ function StripLineNumber(link, linePrefixIndex)
 
 function GetContent(path) {
   try {
-    return fs.readFileSync(path, "utf8")
+    return actionUtils.readFile(path)
   }
   catch (error) {}
 
   return undefined;
 }
 
-function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, learningPathFile)
+function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, learningPathFile, oldHash, newHash, sourceDirectoryName, excludeLinksArray, core)
 {
   // Get all indices where a link to the repo is found within the current learning path file
   var linkIndices = [];
@@ -145,7 +139,7 @@ function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, l
 
     if (!link.includes(oldHash))
     {
-      UpdateOutOfSync(link, learningPathFile);
+      UpdateOutOfSync(link, learningPathFile, core);
       continue
     }
 
@@ -159,14 +153,14 @@ function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, l
     {
       const fileName = linkFilePath.substring(linkFilePath.lastIndexOf('/') + 1);
 
-      UpdateModifiedFiles(fileName, linkHasLineNumber ? StripLineNumber(link, linePrefixIndex) : link, learningPathFile);
+      UpdateModifiedFiles(fileName, linkHasLineNumber ? StripLineNumber(link, linePrefixIndex) : link, learningPathFile, core);
 
       // This is the line number in the learning path file that contains the link - not the #L line number in the link itself
       const learningPathLineNumber = learningPathContents.substring(0, startOfLink).split("\n").length;
 
       var headContent = GetContent(linkFilePath)
       if (!headContent) {
-        UpdateManuallyReview(fileName, link, learningPathFile, learningPathLineNumber);
+        UpdateManuallyReview(fileName, link, learningPathFile, learningPathLineNumber, core);
         continue
       }
       const headContentLines = headContent.toString().split("\n");
@@ -180,7 +174,7 @@ function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, l
 
       if (prevContentLines.length < oldLineNumber)
       {
-        UpdateManuallyReview(fileName, link, learningPathFile, learningPathLineNumber, oldLineNumber);
+        UpdateManuallyReview(fileName, link, learningPathFile, learningPathLineNumber, core, oldLineNumber);
       }
       else if (headContentLines.length < oldLineNumber || prevContentLines[oldLineNumber - 1].trim() !== headContentLines[oldLineNumber - 1].trim())
       {
@@ -189,12 +183,12 @@ function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, l
 
         if (newLineNumberLast !== newLineNumberFirst) // Multiple matches found in the file
         {
-          UpdateManuallyReview(fileName, link, learningPathFile, learningPathLineNumber, oldLineNumber);
+          UpdateManuallyReview(fileName, link, learningPathFile, learningPathLineNumber, core, oldLineNumber);
         }
         else
         {
           let updatedLink = StripLineNumber(link.replace(oldHash, newHash), linePrefixIndex) + linePrefix + newLineNumberFirst;
-          UpdateSuggestions(fileName, link, updatedLink, learningPathFile, learningPathLineNumber, oldLineNumber, newLineNumberFirst);
+          UpdateSuggestions(fileName, link, updatedLink, learningPathFile, learningPathLineNumber, oldLineNumber, newLineNumberFirst, core);
         }
       }
     }
@@ -203,22 +197,29 @@ function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, l
 
 const main = async () => {
 
+  const [core] = await actionUtils.installAndRequirePackages("@actions/core");
+
   try {
     const learningPathDirectory = core.getInput('learningPathsDirectory', { required: true });
     const repoURLToSearch = core.getInput('repoURLToSearch', { required: true });
     const changedFilePaths = core.getInput('changedFilePaths', {required: false});
     const learningPathHashFile = core.getInput('learningPathHashFile', { required: true });
-
+    const sourceDirectoryName = core.getInput('sourceDirectoryName', { required: true });
+    const oldHash = core.getInput('oldHash', { required: true });
+    const newHash = core.getInput('newHash', { required: true });
+    const excludeLinks = core.getInput('excludeLinks', { required: false });
+    const excludeLinksArray = excludeLinks ? excludeLinks.split(',').map(function(item) { return item.toLowerCase().trim() }) : [];
+    
     if (changedFilePaths === null || changedFilePaths.trim() === "") { return }
 
     // Scan each file in the learningPaths directory
-    fs.readdir(learningPathDirectory, (_, files) => {
+    actionUtils.readdir(learningPathDirectory, (_, files) => {
       files.forEach(learningPathFile => {
         try {
-          const learningPathContents = fs.readFileSync(learningPathDirectory + "/" + learningPathFile, "utf8")
+          const learningPathContents = actionUtils.readFile(learningPathDirectory + "/" + learningPathFile)
           if (learningPathContents)
           {
-            ValidateLinks(learningPathContents, repoURLToSearch, changedFilePaths.split(' '), learningPathFile)
+            ValidateLinks(learningPathContents, repoURLToSearch, changedFilePaths.split(' '), learningPathFile, oldHash, newHash, sourceDirectoryName, excludeLinksArray, core)
           }
         } catch (error) {
           console.log("Error: " + error)
@@ -227,23 +228,21 @@ const main = async () => {
       });
     });
 
-    fs.writeFileSync(learningPathHashFile, newHash, "utf8");
-    AppendModifiedFilesToCommit(learningPathHashFile)
+    actionUtils.writeFile(learningPathHashFile, newHash);
+    AppendModifiedFilesToCommit(learningPathHashFile, core)
 
     // Scan each file in the learningPaths directory
-    fs.readdir(learningPathDirectory, (_, files) => {
+    actionUtils.readdir(learningPathDirectory, (_, files) => {
       files.forEach(learningPathFile => {
         try {
           const fullPath = learningPathDirectory + "/" + learningPathFile
-          const content = fs.readFileSync(fullPath, "utf8")
+          const content = actionUtils.readFile(fullPath)
 
           var replacedContent = content
 
           let suggestionsArray = Array.from(suggestions);
-          console.log(suggestionsArray.length);
           if (suggestionsArray && suggestionsArray.length > 0) {
             suggestionsArray.forEach(suggestion => {
-              console.log(suggestion);
               const suggestionArray = suggestion.split(oldNewLinkSeparator)
               var oldLink = suggestionArray[0]
               var newLink = suggestionArray[1]
@@ -255,11 +254,10 @@ const main = async () => {
 
           replacedContent = ReplaceOldWithNewText(replacedContent, oldHash, newHash)
 
-          fs.writeFileSync(fullPath, replacedContent, "utf8");
-          //actionUtils.writeFile(learningPathDirectory + "/" + learningPathFile, learningPathFileContentStr);
+          actionUtils.writeFile(fullPath, replacedContent);
 
           if (content !== replacedContent) {
-            AppendModifiedFilesToCommit(fullPath)
+            AppendModifiedFilesToCommit(fullPath, core)
           }
         } catch (error) {
           console.log("Error: " + error)
