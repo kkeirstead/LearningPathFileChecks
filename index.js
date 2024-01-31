@@ -217,7 +217,7 @@ const main = async () => {
       });
     });
 
-    const learningPathHashFile = core.getInput('learningPathHashFile', { required: true });
+    const learningPathHashFile = headPathPrefix + core.getInput('learningPathHashFile', { required: true });
 
     fs.writeFileSync(learningPathHashFile, newHash, "utf8");
     AppendModifiedFiles(learningPathHashFile)
@@ -244,7 +244,7 @@ const main = async () => {
 
           replacedContent = ReplaceOldWithNewText(replacedContent, oldHash, newHash)
 
-          fs.writeFileSync(learningPathDirectory + "/" + learningPathFile, replacedContent, "utf8");
+          fs.writeFileSync(headLearningPathsDirectory + "/" + learningPathFile, replacedContent, "utf8");
           //actionUtils.writeFile(learningPathDirectory + "/" + learningPathFile, learningPathFileContentStr);
 
           if (content !== replacedContent) {
