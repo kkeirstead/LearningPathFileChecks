@@ -22,7 +22,7 @@ let modifiedFilesToCommit = [];
 
 function AppendModifiedFilesToCommit(path)
 {
-  modifiedFiles.push(path)
+  modifiedFilesToCommit.push(path)
   core.setOutput('modifiedFiles', modifiedFiles.join(' '))
 }
 
