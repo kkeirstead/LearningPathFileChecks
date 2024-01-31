@@ -216,7 +216,7 @@ const main = async () => {
     actionUtils.readdir(learningPathDirectory, (_, files) => {
       files.forEach(learningPathFile => {
         try {
-          const learningPathContents = actionUtils.readFileSync(learningPathDirectory + "/" + learningPathFile)
+          const learningPathContents = GetContent(learningPathDirectory + "/" + learningPathFile)
           if (learningPathContents)
           {
             ValidateLinks(learningPathContents, repoURLToSearch, changedFilePaths.split(' '), learningPathFile, oldHash, newHash, sourceDirectoryName, excludeLinksArray, core)
