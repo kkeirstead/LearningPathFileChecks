@@ -1,7 +1,6 @@
 const core = require('@actions/core');
 const fs = require('fs');
 const prevPathPrefix = "prev/";
-const headPathPrefix = "";
 const linePrefix = "#L";
 const separator = " | ";
 const sourceDirectoryName = core.getInput('sourceDirectoryName', { required: true });
@@ -165,7 +164,7 @@ function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, l
       // This is the line number in the learning path file that contains the link - not the #L line number in the link itself
       const learningPathLineNumber = learningPathContents.substring(0, startOfLink).split("\n").length;
 
-      var headContent = GetContent(headPathPrefix + linkFilePath)
+      var headContent = GetContent(linkFilePath)
       if (!headContent) {
         UpdateManuallyReview(fileName, link, learningPathFile, learningPathLineNumber);
         continue
@@ -207,14 +206,11 @@ const main = async () => {
   try {
     const learningPathDirectory = core.getInput('learningPathsDirectory', { required: true });
     const repoURLToSearch = core.getInput('repoURLToSearch', { required: true });
-    const headLearningPathsDirectory = headPathPrefix + learningPathDirectory;
+    const headLearningPathsDirectory = learningPathDirectory;
     const changedFilePaths = core.getInput('changedFilePaths', {required: false});
-    const learningPathHashFile = headPathPrefix + core.getInput('learningPathHashFile', { required: true });
+    const learningPathHashFile = core.getInput('learningPathHashFile', { required: true });
 
     if (changedFilePaths === null || changedFilePaths.trim() === "") { return }
-
-    fs.writeFileSync(learningPathHashFile, newHash, "utf8");
-    AppendModifiedFilesToCommit(learningPathHashFile)
 
     // Scan each file in the learningPaths directory
     fs.readdir(headLearningPathsDirectory, (_, files) => {
@@ -224,29 +220,46 @@ const main = async () => {
           if (learningPathContents)
           {
             ValidateLinks(learningPathContents, repoURLToSearch, changedFilePaths.split(' '), learningPathFile)
+          }
+        } catch (error) {
+          console.log("Error: " + error)
+          console.log("Could not find learning path file: " + learningPathFile)
+        }
+      });
+    });
 
-            var replacedContent = learningPathContents
+    fs.writeFileSync(learningPathHashFile, newHash, "utf8");
+    AppendModifiedFilesToCommit(learningPathHashFile)
 
-            let suggestionsArray = Array.from(suggestions);
-            if (suggestionsArray && suggestionsArray.length > 0) {
-              suggestionsArray.forEach(suggestion => {
-                const suggestionArray = suggestion.split(oldNewLinkSeparator)
-                var oldLink = suggestionArray[0]
-                var newLink = suggestionArray[1]
-                oldLink = oldLink.substring(oldLink.indexOf('(') + 1, oldLink.lastIndexOf(')'))
-                newLink = newLink.substring(newLink.indexOf('(') + 1, newLink.lastIndexOf(')'))
-                replacedContent = ReplaceOldWithNewText(replacedContent, oldLink, newLink)
-              })
-            }
-  
-            replacedContent = ReplaceOldWithNewText(replacedContent, oldHash, newHash)
-  
-            fs.writeFileSync(headLearningPathsDirectory + "/" + learningPathFile, replacedContent, "utf8");
-            //actionUtils.writeFile(learningPathDirectory + "/" + learningPathFile, learningPathFileContentStr);
-  
-            if (learningPathContents !== replacedContent) {
-              AppendModifiedFilesToCommit(fullPath)
-            }
+    let suggestionsArray = Array.from(suggestions);
+
+    // Scan each file in the learningPaths directory
+    fs.readdir(headLearningPathsDirectory, (_, files) => {
+      files.forEach(learningPathFile => {
+        try {
+          const fullPath = headLearningPathsDirectory + "/" + learningPathFile
+          const content = fs.readFileSync(fullPath, "utf8")
+
+          var replacedContent = content
+
+          if (suggestionsArray && suggestionsArray.length > 0) {
+            suggestionsArray.forEach(suggestion => {
+              const suggestionArray = suggestion.split(oldNewLinkSeparator)
+              var oldLink = suggestionArray[0]
+              var newLink = suggestionArray[1]
+              oldLink = oldLink.substring(oldLink.indexOf('(') + 1, oldLink.lastIndexOf(')'))
+              newLink = newLink.substring(newLink.indexOf('(') + 1, newLink.lastIndexOf(')'))
+              replacedContent = ReplaceOldWithNewText(replacedContent, oldLink, newLink)
+            })
+          }
+
+          replacedContent = ReplaceOldWithNewText(replacedContent, oldHash, newHash)
+
+          fs.writeFileSync(headLearningPathsDirectory + "/" + learningPathFile, replacedContent, "utf8");
+          //actionUtils.writeFile(learningPathDirectory + "/" + learningPathFile, learningPathFileContentStr);
+
+          if (content !== replacedContent) {
+            AppendModifiedFilesToCommit(fullPath)
           }
         } catch (error) {
           console.log("Error: " + error)
