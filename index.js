@@ -245,11 +245,15 @@ const main = async () => {
 
           var replacedContent = content
 
-          if (suggestions && suggestions.length > 0) {
-            suggestions.forEach(suggestion => {
+          let suggestionsArray = Array.from(suggestions);
+          if (suggestionsArray && suggestionsArray.length > 0) {
+            suggestionsArray.forEach(suggestion => {
+              console.log("Suggestion: " + suggestion)
               const suggestionArray = suggestion.split(oldNewLinkSeparator)
               var oldLink = suggestionArray[0]
               var newLink = suggestionArray[1]
+              console.log("Old Link: " + oldLink)
+              console.log("New Link: " + newLink)
               oldLink = oldLink.substring(oldLink.indexOf('(') + 1, oldLink.lastIndexOf(')'))
               newLink = newLink.substring(newLink.indexOf('(') + 1, newLink.lastIndexOf(')'))
               replacedContent = ReplaceOldWithNewText(replacedContent, oldLink, newLink)
