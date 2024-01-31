@@ -18,13 +18,6 @@ var manuallyReview = new Set();
 var suggestions = new Set();
 
 const oldNewLinkSeparator = ' -> ';
-let modifiedFiles = [];
-
-function AppendModifiedFiles(path)
-{
-  modifiedFiles.push(path)
-  core.setOutput('modifiedFiles', modifiedFiles.join(' '))
-}
 
 function ReplaceOldWithNewText(content, oldText, newText)
 {
@@ -234,7 +227,6 @@ const main = async () => {
     const learningPathHashFile = headPathPrefix + core.getInput('learningPathHashFile', { required: true });
 
     fs.writeFileSync(learningPathHashFile, newHash, "utf8");
-    AppendModifiedFiles(learningPathHashFile)
 
     // Scan each file in the learningPaths directory
     fs.readdir(headLearningPathsDirectory, (_, files) => {
@@ -249,8 +241,9 @@ const main = async () => {
           var replacedContent = content
 
           console.log("Suggestions: " + suggestions)
-          if (suggestions && suggestions.length > 0) {
-            suggestions.forEach(suggestion => {
+          suggestionsArray = Array.from(suggestions)
+          if (suggestionsArray && suggestionsArray.length > 0) {
+            suggestionsArray.forEach(suggestion => {
               console.log("Suggestion: " + suggestion)
               const suggestionArray = suggestion.split(oldNewLinkSeparator)
               var oldLink = suggestionArray[0]
@@ -268,9 +261,6 @@ const main = async () => {
           fs.writeFileSync(headLearningPathsDirectory + "/" + learningPathFile, replacedContent, "utf8");
           //actionUtils.writeFile(learningPathDirectory + "/" + learningPathFile, learningPathFileContentStr);
 
-          if (content !== replacedContent) {
-            AppendModifiedFiles(fullPath)
-          }
         } catch (error) {
           console.log("Error: " + error)
           console.log("Could not find learning path file: " + learningPathFile)
