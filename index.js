@@ -236,7 +236,8 @@ const main = async () => {
         try {
           console.log("Processing file: " + learningPathFile)
 
-          const content = fs.readFileSync(learningPathDirectory + "/" + learningPathFile, "utf8")
+          const filePath = learningPathDirectory + "/" + learningPathFile
+          const content = fs.readFileSync(filePath, "utf8")
 
           var replacedContent = content
 
@@ -256,7 +257,7 @@ const main = async () => {
 
           replacedContent = ReplaceOldWithNewText(replacedContent, oldHash, newHash)
 
-          fs.writeFileSync(headLearningPathsDirectory + "/" + learningPathFile, replacedContent, "utf8");
+          fs.writeFileSync(filePath, replacedContent, "utf8");
           //actionUtils.writeFile(learningPathDirectory + "/" + learningPathFile, learningPathFileContentStr);
 
           if (content !== replacedContent) {
