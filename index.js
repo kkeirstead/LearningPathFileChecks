@@ -70,9 +70,6 @@ function UpdateOutOfSync(link, learningPathFile)
   SetOutput('outOfSync', outOfSync)
 }
 
-// Suggestions - A line reference has changed in this PR, and the PR Author should update the line accordingly.
-// There are edge cases where this may make an incorrect recommendation, so the PR author should verify that
-// this is the correct line to reference.
 function UpdateSuggestions(fileName, oldPath, newPath, learningPathFile, learningPathLineNumber, oldLineNumber, newLineNumber)
 {
   suggestions.add(AssembleOutput(fileName, oldPath, newPath, oldLineNumber, newLineNumber, learningPathFile, learningPathLineNumber))
@@ -212,8 +209,12 @@ const main = async () => {
     const repoURLToSearch = core.getInput('repoURLToSearch', { required: true });
     const headLearningPathsDirectory = headPathPrefix + learningPathDirectory;
     const changedFilePaths = core.getInput('changedFilePaths', {required: false});
-    
+    const learningPathHashFile = headPathPrefix + core.getInput('learningPathHashFile', { required: true });
+
     if (changedFilePaths === null || changedFilePaths.trim() === "") { return }
+
+    fs.writeFileSync(learningPathHashFile, newHash, "utf8");
+    AppendModifiedFilesToCommit(learningPathHashFile)
 
     // Scan each file in the learningPaths directory
     fs.readdir(headLearningPathsDirectory, (_, files) => {
@@ -223,48 +224,29 @@ const main = async () => {
           if (learningPathContents)
           {
             ValidateLinks(learningPathContents, repoURLToSearch, changedFilePaths.split(' '), learningPathFile)
-          }
-        } catch (error) {
-          console.log("Error: " + error)
-          console.log("Could not find learning path file: " + learningPathFile)
-        }
-      });
-    });
 
-    const learningPathHashFile = headPathPrefix + core.getInput('learningPathHashFile', { required: true });
+            var replacedContent = learningPathContents
 
-    fs.writeFileSync(learningPathHashFile, newHash, "utf8");
-    AppendModifiedFilesToCommit(learningPathHashFile)
-
-    let suggestionsArray = Array.from(suggestions);
-
-    // Scan each file in the learningPaths directory
-    fs.readdir(headLearningPathsDirectory, (_, files) => {
-      files.forEach(learningPathFile => {
-        try {
-          const fullPath = headLearningPathsDirectory + "/" + learningPathFile
-          const content = fs.readFileSync(fullPath, "utf8")
-
-          var replacedContent = content
-
-          if (suggestionsArray && suggestionsArray.length > 0) {
-            suggestionsArray.forEach(suggestion => {
-              const suggestionArray = suggestion.split(oldNewLinkSeparator)
-              var oldLink = suggestionArray[0]
-              var newLink = suggestionArray[1]
-              oldLink = oldLink.substring(oldLink.indexOf('(') + 1, oldLink.lastIndexOf(')'))
-              newLink = newLink.substring(newLink.indexOf('(') + 1, newLink.lastIndexOf(')'))
-              replacedContent = ReplaceOldWithNewText(replacedContent, oldLink, newLink)
-            })
-          }
-
-          replacedContent = ReplaceOldWithNewText(replacedContent, oldHash, newHash)
-
-          fs.writeFileSync(headLearningPathsDirectory + "/" + learningPathFile, replacedContent, "utf8");
-          //actionUtils.writeFile(learningPathDirectory + "/" + learningPathFile, learningPathFileContentStr);
-
-          if (content !== replacedContent) {
-            AppendModifiedFilesToCommit(fullPath)
+            let suggestionsArray = Array.from(suggestions);
+            if (suggestionsArray && suggestionsArray.length > 0) {
+              suggestionsArray.forEach(suggestion => {
+                const suggestionArray = suggestion.split(oldNewLinkSeparator)
+                var oldLink = suggestionArray[0]
+                var newLink = suggestionArray[1]
+                oldLink = oldLink.substring(oldLink.indexOf('(') + 1, oldLink.lastIndexOf(')'))
+                newLink = newLink.substring(newLink.indexOf('(') + 1, newLink.lastIndexOf(')'))
+                replacedContent = ReplaceOldWithNewText(replacedContent, oldLink, newLink)
+              })
+            }
+  
+            replacedContent = ReplaceOldWithNewText(replacedContent, oldHash, newHash)
+  
+            fs.writeFileSync(headLearningPathsDirectory + "/" + learningPathFile, replacedContent, "utf8");
+            //actionUtils.writeFile(learningPathDirectory + "/" + learningPathFile, learningPathFileContentStr);
+  
+            if (learningPathContents !== replacedContent) {
+              AppendModifiedFilesToCommit(fullPath)
+            }
           }
         } catch (error) {
           console.log("Error: " + error)
