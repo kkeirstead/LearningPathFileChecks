@@ -11,20 +11,13 @@ var manuallyReview = new Set();
 var suggestions = new Set();
 
 const oldNewLinkSeparator = ' -> ';
-let modifiedFilesToCommit = [];
-
-function AppendModifiedFilesToCommit(path, core)
-{
-  modifiedFilesToCommit.push(path)
-  core.setOutput('modifiedFilesToCommit', modifiedFilesToCommit.join(' '))
-}
 
 function ReplaceOldWithNewText(content, oldText, newText)
 {
   return content.replaceAll(oldText, newText);
 }
 
-function UpdateModifiedFiles(fileName, path, learningPathFile, core)
+function UpdateModifiedFiles(fileName, path, learningPathFile)
 {
   modifiedFilesUrlToFileName[path] = fileName;
 
@@ -37,8 +30,6 @@ function UpdateModifiedFiles(fileName, path, learningPathFile, core)
     const fileName = modifiedFilesUrlToFileName[currPath];
     modifiedFiles.add(AssembleModifiedFilesOutput(fileName, currPath, Array.from(modifiedFilesDict[currPath])));
   }
-
-  SetOutput('modifiedFiles', modifiedFiles, core)
 }
 
 function AssembleModifiedFilesOutput(fileName, path, learningPathFiles)
@@ -51,27 +42,19 @@ function BoldedText(text)
   return "**" + text + "**";
 }
 
-function UpdateManuallyReview(fileName, path, learningPathFile, learningPathLineNumber, core, lineNumber = undefined)
+function UpdateManuallyReview(fileName, path, learningPathFile, learningPathLineNumber, lineNumber = undefined)
 {
   manuallyReview.add(AssembleOutput(fileName, path, undefined, lineNumber, undefined, learningPathFile, learningPathLineNumber))
-  SetOutput('manuallyReview', manuallyReview, core)
 }
 
-function UpdateOutOfSync(link, learningPathFile, core)
+function UpdateOutOfSync(link, learningPathFile)
 {
   outOfSync.add(link + separator + BoldedText(learningPathFile))
-  SetOutput('outOfSync', outOfSync, core)
 }
 
-function UpdateSuggestions(fileName, oldPath, newPath, learningPathFile, learningPathLineNumber, oldLineNumber, newLineNumber, core)
+function UpdateSuggestions(fileName, oldPath, newPath, learningPathFile, learningPathLineNumber, oldLineNumber, newLineNumber)
 {
   suggestions.add(AssembleOutput(fileName, oldPath, newPath, oldLineNumber, newLineNumber, learningPathFile, learningPathLineNumber))
-  SetOutput('suggestions', suggestions, core)
-}
-
-function SetOutput(outputName, outputSet, core)
-{
-  core.setOutput(outputName, Array.from(outputSet).join(","))
 }
 
 function CreateLink(fileName, path, lineNumber)
@@ -118,7 +101,27 @@ function GetContent(path) {
   return undefined;
 }
 
-function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, learningPathFile, oldHash, newHash, sourceDirectoryName, excludeLinksArray, core)
+function ConstructOutputText(core)
+{
+  var manuallyReviewSection = "<h2>Manually Review:</h2>" + Array.from(manuallyReview).join("<br />") + "<br />";
+  if (manuallyReview.size === 0) { manuallyReviewSection = ""; }
+
+  var outOfSyncSection = "<h2>Links With Out Of Sync Commit Hashes:</h2>" + Array.from(outOfSync).join("<br />") + "<br />";
+  if (outOfSync.size === 0) { outOfSyncSection = ""; }  
+
+  var suggestionsSection = "<h2>Auto-Applied Suggestions:</h2>" + Array.from(suggestions).join("<br />") + "<br />";
+  if (suggestions.size === 0) { suggestionsSection = ""; }
+
+  var modifiedFilesSection = "<h2>Modified Files:</h2>" + Array.from(modifiedFiles).join("<br />") + "<br />";
+  if (modifiedFiles.size === 0) { modifiedFilesSection = ""; }
+
+  var body = modifiedFilesSection + manuallyReviewSection + outOfSyncSection + suggestionsSection;
+  console.log("body=" + body);
+
+  core.setOutput('outputText', body);
+}
+
+function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, learningPathFile, oldHash, newHash, sourceDirectoryName, excludeLinksArray)
 {
   // Get all indices where a link to the repo is found within the current learning path file
   var linkIndices = [];
@@ -139,7 +142,7 @@ function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, l
 
     if (!link.includes(oldHash))
     {
-      UpdateOutOfSync(link, learningPathFile, core);
+      UpdateOutOfSync(link, learningPathFile);
       continue
     }
 
@@ -153,14 +156,14 @@ function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, l
     {
       const fileName = linkFilePath.substring(linkFilePath.lastIndexOf('/') + 1);
 
-      UpdateModifiedFiles(fileName, linkHasLineNumber ? StripLineNumber(link, linePrefixIndex) : link, learningPathFile, core);
+      UpdateModifiedFiles(fileName, linkHasLineNumber ? StripLineNumber(link, linePrefixIndex) : link, learningPathFile);
 
       // This is the line number in the learning path file that contains the link - not the #L line number in the link itself
       const learningPathLineNumber = learningPathContents.substring(0, startOfLink).split("\n").length;
 
       var headContent = GetContent(linkFilePath)
       if (!headContent) {
-        UpdateManuallyReview(fileName, link, learningPathFile, learningPathLineNumber, core);
+        UpdateManuallyReview(fileName, link, learningPathFile, learningPathLineNumber);
         continue
       }
       const headContentLines = headContent.toString().split("\n");
@@ -174,7 +177,7 @@ function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, l
 
       if (prevContentLines.length < oldLineNumber)
       {
-        UpdateManuallyReview(fileName, link, learningPathFile, learningPathLineNumber, core, oldLineNumber);
+        UpdateManuallyReview(fileName, link, learningPathFile, learningPathLineNumber, oldLineNumber);
       }
       else if (headContentLines.length < oldLineNumber || prevContentLines[oldLineNumber - 1].trim() !== headContentLines[oldLineNumber - 1].trim())
       {
@@ -183,12 +186,12 @@ function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, l
 
         if (newLineNumberLast !== newLineNumberFirst) // Multiple matches found in the file
         {
-          UpdateManuallyReview(fileName, link, learningPathFile, learningPathLineNumber, core, oldLineNumber);
+          UpdateManuallyReview(fileName, link, learningPathFile, learningPathLineNumber, oldLineNumber);
         }
         else
         {
           let updatedLink = StripLineNumber(link.replace(oldHash, newHash), linePrefixIndex) + linePrefix + newLineNumberFirst;
-          UpdateSuggestions(fileName, link, updatedLink, learningPathFile, learningPathLineNumber, oldLineNumber, newLineNumberFirst, core);
+          UpdateSuggestions(fileName, link, updatedLink, learningPathFile, learningPathLineNumber, oldLineNumber, newLineNumberFirst);
         }
       }
     }
@@ -219,7 +222,7 @@ const main = async () => {
           const learningPathContents = GetContent(learningPathDirectory + "/" + learningPathFile)
           if (learningPathContents)
           {
-            ValidateLinks(learningPathContents, repoURLToSearch, changedFilePaths.split(' '), learningPathFile, oldHash, newHash, sourceDirectoryName, excludeLinksArray, core)
+            ValidateLinks(learningPathContents, repoURLToSearch, changedFilePaths.split(' '), learningPathFile, oldHash, newHash, sourceDirectoryName, excludeLinksArray)
           }
         } catch (error) {
           console.log("Error: " + error)
@@ -229,16 +232,13 @@ const main = async () => {
     });
 
     actionUtils.writeFileSync(learningPathHashFile, newHash);
-    AppendModifiedFilesToCommit(learningPathHashFile, core)
 
     // Scan each file in the learningPaths directory
     actionUtils.readdir(learningPathDirectory, (_, files) => {
       files.forEach(learningPathFile => {
         try {
           const fullPath = learningPathDirectory + "/" + learningPathFile
-          const content = actionUtils.readFileSync(fullPath)
-
-          var replacedContent = content
+          var content = actionUtils.readFileSync(fullPath)
 
           let suggestionsArray = Array.from(suggestions);
           if (suggestionsArray && suggestionsArray.length > 0) {
@@ -248,23 +248,22 @@ const main = async () => {
               var newLink = suggestionArray[1]
               oldLink = oldLink.substring(oldLink.indexOf('(') + 1, oldLink.lastIndexOf(')'))
               newLink = newLink.substring(newLink.indexOf('(') + 1, newLink.lastIndexOf(')'))
-              replacedContent = ReplaceOldWithNewText(replacedContent, oldLink, newLink)
+              content = ReplaceOldWithNewText(content, oldLink, newLink)
             })
           }
 
-          replacedContent = ReplaceOldWithNewText(replacedContent, oldHash, newHash)
+          content = ReplaceOldWithNewText(content, oldHash, newHash)
 
-          actionUtils.writeFileSync(fullPath, replacedContent);
+          actionUtils.writeFileSync(fullPath, content);
 
-          if (content !== replacedContent) {
-            AppendModifiedFilesToCommit(fullPath, core)
-          }
         } catch (error) {
           console.log("Error: " + error)
           console.log("Could not find learning path file: " + learningPathFile)
         }
       });
     });
+
+    ConstructOutputText(core);
 
   } catch (error) {
     core.setFailed(error.message);
