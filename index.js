@@ -9,6 +9,7 @@ modifiedFilesUrlToFileName = {};
 var outOfSync = new Set();
 var manuallyReview = new Set();
 var suggestions = new Set();
+var modifiedFiles = new Set();
 
 const oldNewLinkSeparator = ' -> ';
 
@@ -24,7 +25,7 @@ function UpdateModifiedFiles(fileName, path, learningPathFile)
   modifiedFilesDict[path] = modifiedFilesDict[path] ? modifiedFilesDict[path] : new Set();;
   modifiedFilesDict[path].add(learningPathFile);
 
-  var modifiedFiles = new Set();
+  modifiedFiles = new Set();
   for (currPath in modifiedFilesDict)
   {
     const fileName = modifiedFilesUrlToFileName[currPath];
