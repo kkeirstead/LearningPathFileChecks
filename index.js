@@ -232,6 +232,7 @@ const main = async () => {
           if (learningPathContents)
           {
             ValidateLinks(learningPathContents, repoURLToSearch, changedFilePaths.split(' '), learningPathFile, oldHash, newHash, sourceDirectoryName, excludeLinksArray)
+            ConstructOutputText(core);
           }
         } catch (error) {
           console.log("Error: " + error)
@@ -277,8 +278,6 @@ const main = async () => {
         }
       });
     });
-
-    ConstructOutputText(core);
 
   } catch (error) {
     core.setFailed(error.message);
