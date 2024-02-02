@@ -236,9 +236,6 @@ const main = async () => {
 
     // Scan each file in the learningPaths directory
     actionUtils.readdir(learningPathDirectory, (_, files) => {
-
-      console.log("Writing new hash to file: " + learningPathHashFile);
-      actionUtils.writeFileSync(learningPathHashFile, newHash);
   
       files.forEach(learningPathFile => {
         try {
@@ -266,6 +263,9 @@ const main = async () => {
         }
       });
     });
+
+    console.log("Writing new hash to file: " + learningPathHashFile);
+    actionUtils.writeFileSync(learningPathHashFile, newHash);
 
   } catch (error) {
     core.setFailed(error.message);
