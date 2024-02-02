@@ -171,7 +171,7 @@ function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, l
       // This is the line number in the learning path file that contains the link - not the #L line number in the link itself
       const learningPathLineNumber = learningPathContents.substring(0, startOfLink).split("\n").length;
 
-      var headContent = GetContent(headPathPrefix + linkFilePath)
+      var headContent = GetContent(linkFilePath)
       if (!headContent) {
         UpdateManuallyReview(fileName, link, learningPathFile, learningPathLineNumber);
         continue
@@ -213,10 +213,10 @@ const main = async () => {
   const [core] = await actionUtils.installAndRequirePackages("@actions/core");
 
   try {
-    const learningPathDirectory = core.getInput('learningPathsDirectory', { required: true });
+    const learningPathDirectory = headPathPrefix + core.getInput('learningPathsDirectory', { required: true });
     const repoURLToSearch = core.getInput('repoURLToSearch', { required: true });
     const changedFilePaths = core.getInput('changedFilePaths', {required: false});
-    const learningPathHashFile = core.getInput('learningPathHashFile', { required: true });
+    const learningPathHashFile = headPathPrefix + core.getInput('learningPathHashFile', { required: true });
     const sourceDirectoryName = core.getInput('sourceDirectoryName', { required: true });
     const oldHash = core.getInput('oldHash', { required: true });
     const newHash = core.getInput('newHash', { required: true });
@@ -226,10 +226,10 @@ const main = async () => {
     if (changedFilePaths === null || changedFilePaths.trim() === "") { return }
 
     // Scan each file in the learningPaths directory
-    actionUtils.readdir(headPathPrefix + learningPathDirectory, (_, files) => {
+    actionUtils.readdir(learningPathDirectory, (_, files) => {
       files.forEach(learningPathFile => {
         try {
-          const learningPathContents = GetContent(headPathPrefix + learningPathDirectory + "/" + learningPathFile)
+          const learningPathContents = GetContent(learningPathDirectory + "/" + learningPathFile)
           if (learningPathContents)
           {
             ValidateLinks(learningPathContents, repoURLToSearch, changedFilePaths.split(' '), learningPathFile, oldHash, newHash, sourceDirectoryName, excludeLinksArray)
