@@ -85,6 +85,7 @@ function AppendLineNumber(text, lineNumber)
 function CheckForEndOfLink(str, startIndex)
 {
   const illegalCharIndex = str.substr(startIndex).search("[(), '\`\"\}\{]|\. |\.\n|\s{2,}"); // This regex isn't perfect, but should cover most cases.
+  console.log("illegalCharIndex=" + illegalCharIndex)
   return illegalCharIndex;
 }
 
