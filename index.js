@@ -86,7 +86,7 @@ function AppendLineNumber(text, lineNumber)
 
 function CheckForEndOfLink(str, startIndex)
 {
-  const illegalCharIndex = str.substr(startIndex).search("/[\>\])\s]|$|.$|.\s/m"); // This regex isn't perfect, but should cover most cases.
+  const illegalCharIndex = str.substr(startIndex).search(/[\>\])\s]|$|.$|.\s/m); // This regex isn't perfect, but should cover most cases.
   return illegalCharIndex;
 }
 
@@ -132,7 +132,7 @@ function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, l
   {
     // Clean up the link, determine if it has a line number suffix
     let endOfLink = startOfLink + CheckForEndOfLink(learningPathContents, startOfLink)
-    if (endOfLink === -1) { endOfLink = learningPathContents.length; } // If no illegal characters are found, the link is at the end of the file
+    if (endOfLink < startOfLink) { endOfLink = learningPathContents.length; } // If no illegal characters are found, the link is at the end of the file
 
     const link = learningPathContents.substring(startOfLink, endOfLink);
 
