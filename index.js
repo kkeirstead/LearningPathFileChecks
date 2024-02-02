@@ -1,6 +1,5 @@
 const actionUtils = require('../action-utils.js');
 const prevPathPrefix = "prev/";
-const headPathPrefix = "head/";
 const linePrefix = "#L";
 const separator = " | ";
 
@@ -205,10 +204,10 @@ const main = async () => {
   const [core] = await actionUtils.installAndRequirePackages("@actions/core");
 
   try {
-    const learningPathDirectory = headPathPrefix + core.getInput('learningPathsDirectory', { required: true });
+    const learningPathDirectory = core.getInput('learningPathsDirectory', { required: true });
     const repoURLToSearch = core.getInput('repoURLToSearch', { required: true });
     const changedFilePaths = core.getInput('changedFilePaths', {required: false});
-    const learningPathHashFile = headPathPrefix + core.getInput('learningPathHashFile', { required: true });
+    const learningPathHashFile = core.getInput('learningPathHashFile', { required: true });
     const sourceDirectoryName = core.getInput('sourceDirectoryName', { required: true });
     const oldHash = core.getInput('oldHash', { required: true });
     const newHash = core.getInput('newHash', { required: true });
@@ -234,6 +233,8 @@ const main = async () => {
       });
     });
 
+    actionUtils.writeFileSync(learningPathHashFile, newHash);
+
     // Scan each file in the learningPaths directory
     actionUtils.readdir(learningPathDirectory, (_, files) => {
   
@@ -254,7 +255,6 @@ const main = async () => {
             })
           }
 
-          console.log("Writing new content to file: " + fullPath);
           content = ReplaceOldWithNewText(content, oldHash, newHash)
           actionUtils.writeFileSync(fullPath, content);
         } catch (error) {
@@ -263,9 +263,6 @@ const main = async () => {
         }
       });
     });
-
-    console.log("Writing new hash to file: " + learningPathHashFile);
-    actionUtils.writeFileSync(learningPathHashFile, newHash);
 
   } catch (error) {
     core.setFailed(error.message);
