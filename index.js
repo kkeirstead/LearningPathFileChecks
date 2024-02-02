@@ -1,5 +1,6 @@
 const actionUtils = require('../action-utils.js');
 const prevPathPrefix = "prev/";
+const headPathPrefix = "head/";
 const linePrefix = "#L";
 const separator = " | ";
 
@@ -170,7 +171,7 @@ function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, l
       // This is the line number in the learning path file that contains the link - not the #L line number in the link itself
       const learningPathLineNumber = learningPathContents.substring(0, startOfLink).split("\n").length;
 
-      var headContent = GetContent(linkFilePath)
+      var headContent = GetContent(headPathPrefix + linkFilePath)
       if (!headContent) {
         UpdateManuallyReview(fileName, link, learningPathFile, learningPathLineNumber);
         continue
@@ -212,7 +213,7 @@ const main = async () => {
   const [core] = await actionUtils.installAndRequirePackages("@actions/core");
 
   try {
-    const learningPathDirectory = core.getInput('learningPathsDirectory', { required: true });
+    const learningPathDirectory = headPathPrefix + core.getInput('learningPathsDirectory', { required: true });
     const repoURLToSearch = core.getInput('repoURLToSearch', { required: true });
     const changedFilePaths = core.getInput('changedFilePaths', {required: false});
     const learningPathHashFile = core.getInput('learningPathHashFile', { required: true });
