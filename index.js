@@ -130,13 +130,18 @@ function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, l
 
   for(let startOfLink of linkIndices)
   {
+    console.log("Start of Link: " + startOfLink)
+
     // Clean up the link, determine if it has a line number suffix
     const endOfLink = startOfLink + CheckForEndOfLink(learningPathContents, startOfLink)
+
+    console.log("End of Link: " + endOfLink)
+
     const link = learningPathContents.substring(startOfLink, endOfLink);
 
     if (excludeLinksArray.some(excludeLink => link.toLowerCase().includes(excludeLink))) { continue; }
 
-    console.log("Debug 1")
+    console.log("Link: " + link)
 
     const pathStartIndex = link.indexOf(sourceDirectoryName);
 
