@@ -243,7 +243,7 @@ const main = async () => {
       files.forEach(learningPathFile => {
         try {
           const fullPath = learningPathDirectory + "/" + learningPathFile
-          const content = actionUtils.readFileSync(fullPath)
+          let content = actionUtils.readFileSync(fullPath)
 
           let suggestionsArray = Array.from(suggestions);
           if (suggestionsArray && suggestionsArray.length > 0) {
