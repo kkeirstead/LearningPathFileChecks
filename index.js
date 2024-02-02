@@ -1,5 +1,6 @@
 const actionUtils = require('../action-utils.js');
 const fs = require('fs');
+const path = require('path');
 const prevPathPrefix = "prev/";
 const linePrefix = "#L";
 const separator = " | ";
