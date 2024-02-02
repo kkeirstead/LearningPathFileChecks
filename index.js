@@ -5,7 +5,7 @@ const prevPathPrefix = "prev/";
 const linePrefix = "#L";
 const separator = " | ";
 
-modifiedFilesDict = {};
+modifiedFilesPathToLearningPathFile = {};
 modifiedFilesUrlToFileName = {};
 
 var outOfSync = new Set();
@@ -24,14 +24,14 @@ function UpdateModifiedFiles(fileName, path, learningPathFile)
 {
   modifiedFilesUrlToFileName[path] = fileName;
 
-  modifiedFilesDict[path] = modifiedFilesDict[path] ? modifiedFilesDict[path] : new Set();;
-  modifiedFilesDict[path].add(learningPathFile);
+  modifiedFilesPathToLearningPathFile[path] = modifiedFilesPathToLearningPathFile[path] ? modifiedFilesPathToLearningPathFile[path] : new Set();;
+  modifiedFilesPathToLearningPathFile[path].add(learningPathFile);
 
   modifiedFiles = new Set();
-  for (currPath in modifiedFilesDict)
+  for (currPath in modifiedFilesPathToLearningPathFile)
   {
     const fileName = modifiedFilesUrlToFileName[currPath];
-    modifiedFiles.add(AssembleModifiedFilesOutput(fileName, currPath, Array.from(modifiedFilesDict[currPath])));
+    modifiedFiles.add(AssembleModifiedFilesOutput(fileName, currPath, Array.from(modifiedFilesPathToLearningPathFile[currPath])));
   }
 }
 
@@ -137,8 +137,6 @@ function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, l
 
     if (excludeLinksArray.some(excludeLink => link.toLowerCase().includes(excludeLink))) { continue; }
 
-    console.log("Link: " + link)
-
     const pathStartIndex = link.indexOf(sourceDirectoryName);
 
     if (pathStartIndex === -1) { continue }
@@ -171,16 +169,12 @@ function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, l
       }
       const headContentLines = headContent.toString().split("\n");
 
-      console.log("Still here 3: ");
-
       if (!linkHasLineNumber) { continue; }
       const oldLineNumber = Number(link.substring(linePrefixIndex + linePrefix.length, link.length));
 
       var prevContent = GetContent(prevPathPrefix + linkFilePath)
       if (!prevContent) { continue; }
       const prevContentLines = prevContent.toString().split("\n");
-
-      console.log("Still here 4: ");
 
       if (prevContentLines.length < oldLineNumber)
       {
