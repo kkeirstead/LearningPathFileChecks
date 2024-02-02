@@ -138,7 +138,12 @@ function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, l
     console.log("Debug 1")
 
     const pathStartIndex = link.indexOf(sourceDirectoryName);
+
+    console.log("Path start index: " + pathStartIndex);
+
     if (pathStartIndex === -1) { continue }
+
+    console.log("Still here: ");
 
     if (!link.includes(oldHash))
     {
@@ -149,6 +154,8 @@ function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, l
     const linePrefixIndex = link.indexOf(linePrefix);
     const linkHasLineNumber = linePrefixIndex !== -1;
     const pathEndIndex = linkHasLineNumber ? linePrefixIndex : endOfLink;
+
+    console.log("Still here 2: ");
 
     // Check if the file being referenced by the link is one of the modified files in the PR
     const linkFilePath = link.substring(pathStartIndex, pathEndIndex);
@@ -168,12 +175,16 @@ function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, l
       }
       const headContentLines = headContent.toString().split("\n");
 
+      console.log("Still here 3: ");
+
       if (!linkHasLineNumber) { continue; }
       const oldLineNumber = Number(link.substring(linePrefixIndex + linePrefix.length, link.length));
 
       var prevContent = GetContent(prevPathPrefix + linkFilePath)
       if (!prevContent) { continue; }
       const prevContentLines = prevContent.toString().split("\n");
+
+      console.log("Still here 4: ");
 
       if (prevContentLines.length < oldLineNumber)
       {
@@ -219,7 +230,7 @@ const main = async () => {
     fs.readdir(learningPathDirectory, (_, files) => {
       files.forEach(learningPathFile => {
         try {
-          const learningPathContents = GetContent(learningPathDirectory + "/" + learningPathFile)
+          const learningPathContents = GetContent(path.join(learningPathDirectory, learningPathFile))
           if (learningPathContents)
           {
             ValidateLinks(learningPathContents, repoURLToSearch, changedFilePaths.split(' '), learningPathFile, oldHash, newHash, sourceDirectoryName, excludeLinksArray)
@@ -239,7 +250,7 @@ const main = async () => {
   
       files.forEach(learningPathFile => {
         try {
-          const fullPath = learningPathDirectory + "/" + learningPathFile
+          const fullPath = path.join(learningPathDirectory, learningPathFile)
           let content = fs.readFileSync(fullPath, 'utf8')
 
           let suggestionsArray = Array.from(suggestions);
