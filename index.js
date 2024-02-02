@@ -1,4 +1,5 @@
 const actionUtils = require('../action-utils.js');
+const fs = require('fs');
 const prevPathPrefix = "prev/";
 const linePrefix = "#L";
 const separator = " | ";
@@ -85,7 +86,6 @@ function AppendLineNumber(text, lineNumber)
 function CheckForEndOfLink(str, startIndex)
 {
   const illegalCharIndex = str.substr(startIndex).search("[(), '\`\"\}\{]|\. |\.\n|\s{2,}"); // This regex isn't perfect, but should cover most cases.
-  console.log("illegalCharIndex=" + illegalCharIndex)
   return illegalCharIndex;
 }
 
@@ -96,7 +96,7 @@ function StripLineNumber(link, linePrefixIndex)
 
 function GetContent(path) {
   try {
-    return actionUtils.readFileSync(path)
+    return fs.readFileSync(path, 'utf8');
   }
   catch (error) {}
 
@@ -105,21 +105,17 @@ function GetContent(path) {
 
 function ConstructOutputText(core)
 {
-  var manuallyReviewSection = "<h2>Manually Review:</h2>" + Array.from(manuallyReview).join("<br />") + "<br />";
-  if (manuallyReview.size === 0) { manuallyReviewSection = ""; }
+  var body = "";
 
-  var outOfSyncSection = "<h2>Links With Out Of Sync Commit Hashes:</h2>" + Array.from(outOfSync).join("<br />") + "<br />";
-  if (outOfSync.size === 0) { outOfSyncSection = ""; }  
+  if (manuallyReview.size > 0) { body += "<h2>Manually Review:</h2>" + Array.from(manuallyReview).join("<br />") + "<br />"; }
 
-  var suggestionsSection = "<h2>Auto-Applied Suggestions:</h2>" + Array.from(suggestions).join("<br />") + "<br />";
-  if (suggestions.size === 0) { suggestionsSection = ""; }
+  if (outOfSync.size > 0) { body += "<h2>Links With Out Of Sync Commit Hashes:</h2>" + Array.from(outOfSync).join("<br />") + "<br />"; }
 
-  var modifiedFilesSection = "<h2>Modified Files:</h2>" + Array.from(modifiedFiles).join("<br />") + "<br />";
-  if (modifiedFiles.size === 0) { modifiedFilesSection = ""; }
+  if (suggestions.size > 0) { body += "<h2>Auto-Applied Suggestions:</h2>" + Array.from(suggestions).join("<br />") + "<br />"; }
 
-  var body = modifiedFilesSection + manuallyReviewSection + outOfSyncSection + suggestionsSection;
+  if (modifiedFiles.size > 0) { body += "<h2>Modified Files:</h2>" + Array.from(modifiedFiles).join("<br />") + "<br />"; }
+
   console.log("body=" + body);
-
   core.setOutput('outputText', body);
 }
 
@@ -138,6 +134,8 @@ function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, l
     const link = learningPathContents.substring(startOfLink, endOfLink);
 
     if (excludeLinksArray.some(excludeLink => link.toLowerCase().includes(excludeLink))) { continue; }
+
+    console.log("Debug 1")
 
     const pathStartIndex = link.indexOf(sourceDirectoryName);
     if (pathStartIndex === -1) { continue }
@@ -218,7 +216,7 @@ const main = async () => {
     if (changedFilePaths === null || changedFilePaths.trim() === "") { return }
 
     // Scan each file in the learningPaths directory
-    actionUtils.readdir(learningPathDirectory, (_, files) => {
+    fs.readdir(learningPathDirectory, (_, files) => {
       files.forEach(learningPathFile => {
         try {
           const learningPathContents = GetContent(learningPathDirectory + "/" + learningPathFile)
@@ -234,15 +232,15 @@ const main = async () => {
       });
     });
 
-    actionUtils.writeFileSync(learningPathHashFile, newHash);
+    fs.writeFileSync(learningPathHashFile, newHash);
 
     // Scan each file in the learningPaths directory
-    actionUtils.readdir(learningPathDirectory, (_, files) => {
+    fs.readdir(learningPathDirectory, (_, files) => {
   
       files.forEach(learningPathFile => {
         try {
           const fullPath = learningPathDirectory + "/" + learningPathFile
-          let content = actionUtils.readFileSync(fullPath)
+          let content = fs.readFileSync(fullPath, 'utf8')
 
           let suggestionsArray = Array.from(suggestions);
           if (suggestionsArray && suggestionsArray.length > 0) {
@@ -257,7 +255,7 @@ const main = async () => {
           }
 
           content = ReplaceOldWithNewText(content, oldHash, newHash)
-          actionUtils.writeFileSync(fullPath, content);
+          fs.writeFileSync(fullPath, content);
         } catch (error) {
           console.log("Error: " + error)
           console.log("Could not find learning path file: " + learningPathFile)
