@@ -86,7 +86,7 @@ function AppendLineNumber(text, lineNumber)
 
 function CheckForEndOfLink(str, startIndex)
 {
-  const illegalCharIndex = str.substr(startIndex).search("[(), '\`\"\}\{]|\. |\.\n|\s{2,}"); // This regex isn't perfect, but should cover most cases.
+  const illegalCharIndex = str.substr(startIndex).search("[(), '\`\"\}\{]|\. |\.\n"); // This regex isn't perfect, but should cover most cases.
   return illegalCharIndex;
 }
 
@@ -130,12 +130,8 @@ function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, l
 
   for(let startOfLink of linkIndices)
   {
-    console.log("Start of Link: " + startOfLink)
-
     // Clean up the link, determine if it has a line number suffix
     const endOfLink = startOfLink + CheckForEndOfLink(learningPathContents, startOfLink)
-
-    console.log("End of Link: " + endOfLink)
 
     const link = learningPathContents.substring(startOfLink, endOfLink);
 
@@ -145,11 +141,7 @@ function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, l
 
     const pathStartIndex = link.indexOf(sourceDirectoryName);
 
-    console.log("Path start index: " + pathStartIndex);
-
     if (pathStartIndex === -1) { continue }
-
-    console.log("Still here: ");
 
     if (!link.includes(oldHash))
     {
@@ -160,8 +152,6 @@ function ValidateLinks(learningPathContents, repoURLToSearch, modifiedPRFiles, l
     const linePrefixIndex = link.indexOf(linePrefix);
     const linkHasLineNumber = linePrefixIndex !== -1;
     const pathEndIndex = linkHasLineNumber ? linePrefixIndex : endOfLink;
-
-    console.log("Still here 2: ");
 
     // Check if the file being referenced by the link is one of the modified files in the PR
     const linkFilePath = link.substring(pathStartIndex, pathEndIndex);
