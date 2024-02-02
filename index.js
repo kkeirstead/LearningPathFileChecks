@@ -213,7 +213,7 @@ const main = async () => {
   const [core] = await actionUtils.installAndRequirePackages("@actions/core");
 
   try {
-    const learningPathDirectory = headPathPrefix + core.getInput('learningPathsDirectory', { required: true });
+    const learningPathDirectory = core.getInput('learningPathsDirectory', { required: true });
     const repoURLToSearch = core.getInput('repoURLToSearch', { required: true });
     const changedFilePaths = core.getInput('changedFilePaths', {required: false});
     const learningPathHashFile = core.getInput('learningPathHashFile', { required: true });
@@ -226,10 +226,10 @@ const main = async () => {
     if (changedFilePaths === null || changedFilePaths.trim() === "") { return }
 
     // Scan each file in the learningPaths directory
-    actionUtils.readdir(learningPathDirectory, (_, files) => {
+    actionUtils.readdir(headPathPrefix + learningPathDirectory, (_, files) => {
       files.forEach(learningPathFile => {
         try {
-          const learningPathContents = GetContent(learningPathDirectory + "/" + learningPathFile)
+          const learningPathContents = GetContent(headPathPrefix + learningPathDirectory + "/" + learningPathFile)
           if (learningPathContents)
           {
             ValidateLinks(learningPathContents, repoURLToSearch, changedFilePaths.split(' '), learningPathFile, oldHash, newHash, sourceDirectoryName, excludeLinksArray)
