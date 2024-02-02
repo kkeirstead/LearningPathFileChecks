@@ -14,14 +14,6 @@ var modifiedFiles = new Set();
 
 const oldNewLinkSeparator = ' -> ';
 
-let modifiedFilesToCommit = [];
-
-function AppendModifiedFilesToCommit(path, core)
-{
-  modifiedFilesToCommit.push(path)
-  core.setOutput('modifiedFilesToCommit', modifiedFilesToCommit.join(' '))
-}
-
 function ReplaceOldWithNewText(content, oldText, newText)
 {
   return content.replaceAll(oldText, newText);
@@ -242,17 +234,16 @@ const main = async () => {
       });
     });
 
-    actionUtils.writeFileSync(learningPathHashFile, newHash);
-    AppendModifiedFilesToCommit(learningPathHashFile, core)
-
     // Scan each file in the learningPaths directory
     actionUtils.readdir(learningPathDirectory, (_, files) => {
+
+      console.log("Writing new hash to file: " + learningPathHashFile);
+      actionUtils.writeFileSync(learningPathHashFile, newHash);
+  
       files.forEach(learningPathFile => {
         try {
           const fullPath = learningPathDirectory + "/" + learningPathFile
           const content = actionUtils.readFileSync(fullPath)
-
-          var replacedContent = content
 
           let suggestionsArray = Array.from(suggestions);
           if (suggestionsArray && suggestionsArray.length > 0) {
@@ -262,17 +253,13 @@ const main = async () => {
               var newLink = suggestionArray[1]
               oldLink = oldLink.substring(oldLink.indexOf('(') + 1, oldLink.lastIndexOf(')'))
               newLink = newLink.substring(newLink.indexOf('(') + 1, newLink.lastIndexOf(')'))
-              replacedContent = ReplaceOldWithNewText(replacedContent, oldLink, newLink)
+              content = ReplaceOldWithNewText(content, oldLink, newLink)
             })
           }
 
-          replacedContent = ReplaceOldWithNewText(replacedContent, oldHash, newHash)
-
-          actionUtils.writeFileSync(fullPath, replacedContent);
-
-          if (content !== replacedContent) {
-            AppendModifiedFilesToCommit(fullPath, core)
-          }
+          console.log("Writing new content to file: " + fullPath);
+          content = ReplaceOldWithNewText(content, oldHash, newHash)
+          actionUtils.writeFileSync(fullPath, content);
         } catch (error) {
           console.log("Error: " + error)
           console.log("Could not find learning path file: " + learningPathFile)
